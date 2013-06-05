@@ -13,6 +13,8 @@ import shutil
 from losspager.io import shapefile
 from losspager.map.poly import PagerPolygon
 from losspager.map import geoserve
+from losspager.map import country
+from losspager.io import esri
 
 #third party
 import MySQLdb as mysql
@@ -175,11 +177,14 @@ def getMagnitude(cursor,eid):
     
 def getEvents(cursor,options,config):
     gs = geoserve.GeoServe()
+                             
     if options.countryCode is not None:
         shpfile = config.get('FILES','country')
         shape = shapefile.PagerShapeFile(shpfile)
-        country = shape.getShapesByAttr('ISO2',options.countryCode)[0]
-        pp = PagerPolygon(country['x'],country['y'])
+        countryshape = shape.getShapesByAttr('ISO2',options.countryCode)[0]
+        pp = PagerPolygon(countryshape['x'],countryshape['y'])
+        cgrid = esri.EsriGrid(config.get('FILES','isogrid'))
+        numccode = country.getCountryCode(options.countryCode)['number']
     
     #add time to this query later
     startTime = datetime.datetime(1900,1,1)
@@ -229,8 +234,11 @@ def getEvents(cursor,options,config):
 
         if options.countryCode is not None:
             if pp.boundingBoxContainsPoint(lon,lat):
-                print 'Found event %s (%.4f,%.4f) in Taiwan bounding box' % (time,lat,lon)
-                eventlist.append({'lat':lat,'lon':lon,'depth':depth,'time':time,'magnitude':magnitude,'loc':location})
+                cgrid.load((lon-0.5,lon+0.5,lat-0.5,lat+0.5))
+                isocode = int(cgrid.getValue(lat,lon))
+                if isocode == numccode:
+                    print 'Found event %s (%.4f,%.4f) in %s bounding box' % (time,lat,lon,options.countryCode)
+                    eventlist.append({'lat':lat,'lon':lon,'depth':depth,'time':time,'magnitude':magnitude,'loc':location})
         else:
             eventlist.append({'lat':lat,'lon':lon,'depth':depth,'time':time,'magnitude':magnitude,'loc':location})
         idx += 1
