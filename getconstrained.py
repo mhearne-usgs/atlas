@@ -126,7 +126,10 @@ if __name__ == '__main__':
             filenames = getFiles(event['folder'])
             p1,f1 = os.path.split(event['folder'])
             for filename in filenames:
-                p2,f2 = filename.split(f1)
+                try:
+                    p2,f2 = filename.split(f1)
+                except:
+                    pass
                 arcname = f1+f2
                 myzip.write(filename,arcname)
                 
