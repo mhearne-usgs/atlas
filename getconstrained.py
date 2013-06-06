@@ -121,6 +121,7 @@ if __name__ == '__main__':
 
     myzip = zipfile.ZipFile('constrained.zip','w',zipfile.ZIP_DEFLATED)
     for event in events:
+        print event['folder']
         if event['hasbias'] or event['hasfault']:
             filenames = getFiles(event['folder'])
             p1,f1 = os.path.split(event['folder'])
