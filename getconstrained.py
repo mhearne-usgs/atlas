@@ -45,7 +45,7 @@ def parseInfo(infoxml):
     dom.unlink()
     return event
 
-def parseFolder(rootfolder):
+def parseFolder(rootfolder,startdate,enddate):
     eventfolders = os.listdir(rootfolder)
     events = []
     for efolder in eventfolders:
@@ -53,7 +53,9 @@ def parseFolder(rootfolder):
         eventxml = os.path.join(eventfolder,'input','event.xml')
         if not os.path.isfile(eventxml):
             continue
-
+        event1 = parseEvent(eventxml)
+        if event1['time'] < startdate or event1['time'] > enddate:
+            continue
         infoxml = os.path.join(eventfolder,'output','info.xml')
         if not os.path.isfile(infoxml):
             continue
@@ -105,8 +107,14 @@ def getFiles(folder):
 if __name__ == '__main__':
     #constrained events are defined as those that have finite fault data or have a non-zero bias correction.
     rootfolder = sys.argv[1]
+    startdatestr = sys.argv[2]
+    enddatestr = sys.argv[3]
+
+    startdate = datetime.datetime.strptime(startdatestr,'%Y-%m-%d')
+    enddate = datetime.datetime.strptime(enddatestr,'%Y-%m-%d')
+    
     if os.path.isdir(rootfolder):
-        events = parseFolder(rootfolder)
+        events = parseFolder(rootfolder,startdate,enddate)
     else:
         print 'Root folder "%s" is not a directory'
         sys.exit(1)
