@@ -49,6 +49,8 @@ def parseFolder(rootfolder,startdate,enddate):
     eventfolders = os.listdir(rootfolder)
     events = []
     for efolder in eventfolders:
+        if efolder.find('_se') > -1:
+            continue
         eventfolder = os.path.join(rootfolder,efolder)
         eventxml = os.path.join(eventfolder,'input','event.xml')
         if not os.path.isfile(eventxml):
