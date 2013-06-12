@@ -35,7 +35,7 @@ def parseInfo(infoxml):
         name = tag.getAttribute('name')
         if name == 'bias' or name == 'mi_bias':
             value = tag.getAttribute('value')
-            bias_values = [float(b) for b in value.split()]
+            bias_values = [abs(float(b)) for b in value.split()]
             if max(bias_values) > 0.0:
                 event['hasbias'] = True
         if name == 'faultfiles':

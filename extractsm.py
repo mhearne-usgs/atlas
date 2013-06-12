@@ -32,8 +32,8 @@ DAMAGETABLES = {'pde':['damage',
                          'undiffDeaths','totalDeaths','injuries','homeless'],
                 'utsu':['deaths','injuries','fireflag','damage']}
 
-MAGHIERARCHY = ['other','cmt','pde-Mw','centennial','pde']
-LOCHIERARCHY = ['other','centennial','pde','noaa']
+MAGHIERARCHY = ['atlas_event','other','cmt','pde-Mw','centennial','pde']
+LOCHIERARCHY = ['atlas_event','other','centennial','pde','noaa']
 PDEMAG = {'magnitude':'magtype','magc1':'magc1type','magc2':'magc2type'}
 
 EVENTXML = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -67,7 +67,155 @@ created       CDATA   #REQUIRED
 </shakemap-data>
 '''
 
-def createShakeInput(eventlist,options):
+class DataBaseSucker(object):
+    connection = None
+    cursor = None
+    def __init__(self,connection,cursor):
+        self.connection = connection
+        self.cursor = cursor
+
+    def writeShakeMapData(self,eventfolder,eventid):
+        query = 'SELECT id,eventcode,lat,lon,depth,magnitude,time,timezone,locstring,created,type,network,inserttime FROM atlas_event WHERE eid=%i' % eventid
+        self.cursor.execute(query)
+        row = self.cursor.fetchone()
+        if row is None:
+            return
+
+        eventid = row[0] #this is the atlas_event id
+        print 'Writing atlas data for %s' % eventcode
+        inputfolder = os.path.join(eventfolder,'input')
+        configfolder = os.path.join(eventfolder,'config')
+        try:
+            if not os.path.isdir(inputfolder):
+                os.makedirs(inputfolder)
+            if not os.path.isdir(configfolder):
+                os.makedirs(configfolder)
+        except:
+            print 'Unable to create input or config folder %s.  Stopping.' % (inputfolder,configfolder)
+            self.close()
+            sys.exit(0)
+        self.writeStationList(eventid,inputfolder)
+        self.writeFaultFile(eventid,inputfolder)
+        self.writeSource(eventid,inputfolder)
+        self.writeConfig(eventid,configfolder)
+        self.writeRun(eventid,os.path.join(atlasdir,eventcode))
+
+    def writeRun(self,eventid,eventfolder):
+        query = 'SELECT filename,content FROM atlas_run_file WHERE event_id=%i' % eventid
+        self.cursor.execute(query)
+        row = self.cursor.fetchone()
+        runfile = row[0]
+        runcontent = row[1]
+        f = open(runfile,'wt')
+        f.write(runcontent)
+        f.close()
+        
+
+    def writeConfig(self,eventid,configfolder):
+        query = 'SELECT id,filename FROM atlas_config WHERE event_id=%i' % eventid
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        for row in rows:
+            configid = row[0]
+            filename = row[1]
+            configfile = os.path.join(configfolder,filename)
+            f = open(configfile,'wt')
+            query = 'SELECT configparam,configvalue FROM atlas_config_param WHERE config_id=%i' % configid
+            self.cursor.execute(query)
+            for trow in self.cursor.fetchall():
+                param = trow[0]
+                value = trow[1]
+                f.write('%s = %s\n' % (param,value))
+            f.close()
+
+    def writeSource(self,eventid,inputfolder):
+        query = 'SELECT sourcekey,sourcevalue FROM atlas_source WHERE event_id=%i' % eventid
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        filename = os.path.join(inputfolder,'source.txt')
+        f = open(filename,'wt')
+        for row in rows:
+            key = row[0]
+            value = row[1]
+            f.write('%s = %s\n' % (key,value))
+        f.close()
+            
+
+    def writeFaultFile(self,eventid,inputfolder):
+        query = 'SELECT id,filename,firstline FROM atlas_fault_file WHERE event_id=%i' % eventid
+        self.cursor.execute(query)
+        row = self.cursor.fetchone()
+        if row is None:
+            return
+        fileid = row[0]
+        filename = row[1]
+        firstline = row[2]
+        faultfile = os.path.join(inputfolder,filename)
+        f = open(faultfile,'wt')
+        try:
+            f.write('#%s\n' % firstline)
+        except Exception,msg:
+            pass
+        query = 'SELECT seqno,lat,lon,depth FROM atlas_fault WHERE faultfile_id=%i' % fileid
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        rows = sorted(rows,key=lambda row:row[0]) #sort by seqno
+        for row in rows:
+            f.write('%.4f %.4f %.4f\n' % (row[1],row[2],row[3]))
+        f.close()
+
+    def writeStationList(self,eventid,inputfolder):
+        query = 'SELECT id,filename,created FROM atlas_station_file WHERE event_id=%i' % eventid
+        self.cursor.execute(query)
+        for row in self.cursor.fetchall():
+            fileid = row[0]
+            fname = row[1]
+            created = time.mktime(row[2].timetuple())
+            stationfile = os.path.join(inputfolder,fname)
+            f = open(stationfile,'wt')
+            f.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n')
+            f.write('<stationlist created="%i">\n' % created)
+            fmt = 'SELECT id,code,name,insttype,lat,lon,source,netid,commtype,intensity FROM atlas_station WHERE stationfile_id=%i'
+            self.cursor.execute(fmt % fileid)
+            for trow in self.cursor.fetchall():
+                stationid = trow[0]
+                code = trow[1]
+                name = trow[2]
+                insttype = trow[3]
+                lat = trow[4]
+                lon = trow[5]
+                source = trow[6]
+                netid = trow[7]
+                commtype = trow[8]
+                intensity = trow[9]
+                fmt = '<station code="%s" name="%s" insttype="%s" lat="%.3f" lon="%.3f" source="%s" netid="%s" commtype="%s" intensity="%.1f">\n'
+                f.write(fmt % (code,name,insttype,lat,lon,source,netid,commtype,intensity))
+                query = 'SELECT id,name FROM atlas_component WHERE station_id=%i' % stationid
+                self.cursor.execute(query)
+                for srow in self.cursor.fetchall():
+                    compid = srow[0]
+                    cname = srow[1]
+                    f.write('<comp name="%s">\n' % name)
+                    query = 'SELECT componentkey,componentvalue FROM atlas_component_param WHERE component_id=%i' % compid
+                    self.cursor.execute(query)
+                    for urow in self.cursor.fetchall():
+                        key = urow[0]
+                        value = urow[1]
+                        f.write('<%s value="%.4f"/>\n' % (key,value))
+                    f.write('</comp>\n')
+                f.write('</station>\n')
+            f.write('</stationlist>\n')
+            f.close()
+            
+            
+            
+    def close(self):
+        self.cursor.close()
+        self.connection.close()
+        self.shake_cursor.close()
+        self.shake_connection.close()
+
+def createShakeInput(eventlist,options,sucker):
     folders = []
     zipname = 'events'
     startTime = datetime.datetime(1900,1,1)
@@ -86,6 +234,7 @@ def createShakeInput(eventlist,options):
     shakezip = zipfile.ZipFile(zipname,'w',zipfile.ZIP_DEFLATED)
     for event in eventlist:
         eventid = event['time'].strftime('%Y%m%d%H%M%S')
+        event_table_id = event['eventid'] #this the database event table id
         folder = os.path.join(os.getcwd(),eventid)
         if not os.path.isdir(folder):
             os.makedirs(folder)
@@ -109,6 +258,7 @@ def createShakeInput(eventlist,options):
         f = open(eventfile,'wt')
         f.write(eventxml)
         f.close()
+        sucker.writeShakeMapData(inputfolder,event_table_id)
         shakezip.write(eventfile,os.path.join(eventid,'input','event.xml'))
         folders.append(folder)
 
@@ -240,10 +390,26 @@ def getEvents(cursor,options,config):
                     print 'Found event %s (%.4f,%.4f) in %s bounding box' % (time,lat,lon,options.countryCode)
                     eventlist.append({'lat':lat,'lon':lon,'depth':depth,'time':time,'magnitude':magnitude,'loc':location})
         else:
-            eventlist.append({'lat':lat,'lon':lon,'depth':depth,'time':time,'magnitude':magnitude,'loc':location})
+            eventlist.append({'eventid':eid,'lat':lat,'lon':lon,'depth':depth,'time':time,'magnitude':magnitude,'loc':location})
         idx += 1
 
     return eventlist
+
+def generateConfig(configfile):
+    f = open(configfile,'wt')
+    config = ConfigParser.RawConfigParser()
+    sections = {'DATABASE':['host','db','user','password'],
+                'FILES':['country']}
+    for section,fields in sections.iteritems():
+        config.add_section(section)
+        for field in fields:
+            resp = ''
+            while not len(resp.strip()):
+                resp = raw_input('Enter a valid value for option "%s" under section "%s": ')
+            config.set(section,field,resp.strip())
+            
+    config.write(f)
+    f.close()
 
 def main(options,config):
     config.readfp(open(configfile))
@@ -269,26 +435,12 @@ def main(options,config):
     connection = mysql.connect(host=host,user=user,db=db,passwd=password)
     cursor = connection.cursor()
 
+    sucker = DataBaseSucker(connection,cursor)
+    
     eventlist = getEvents(cursor,options,config)
-    shakezip = createShakeInput(eventlist,options)
+    shakezip = createShakeInput(eventlist,options,sucker)
     cursor.close()
     connection.close()
-
-def generateConfig(configfile):
-    f = open(configfile,'wt')
-    config = ConfigParser.RawConfigParser()
-    sections = {'DATABASE':['host','db','user','password'],
-                'FILES':['country']}
-    for section,fields in sections.iteritems():
-        config.add_section(section)
-        for field in fields:
-            resp = ''
-            while not len(resp.strip()):
-                resp = raw_input('Enter a valid value for option "%s" under section "%s": ')
-            config.set(section,field,resp.strip())
-            
-    config.write(f)
-    f.close()
     
 if __name__ == '__main__':
     usage = usage = "usage: %prog [options]"
