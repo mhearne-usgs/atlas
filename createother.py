@@ -126,7 +126,7 @@ if __name__ == '__main__':
     query = 'CREATE TABLE other ('
     for cname,cvalue in tabledef.iteritems():
         query = query + ' %s %s,' % (cname,cvalue)
-        query = query[0:-1] + ')'
+    query = query[0:-1] + ')'
     try:
         cursor.execute(query)
         connection.commit()
