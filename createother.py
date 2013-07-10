@@ -138,17 +138,21 @@ if __name__ == '__main__':
         
     folders = sys.argv[1:]
     for folder in folders:
-        eventfile = os.path.join(folder,'input','event.xml')
-        if not os.path.isfile(eventfile):
-            continue
-        edict = parseEvent(eventfile)
-        if edict is None:
-            print 'Error parsing %s' % eventfile
-            continue
-        success = insertEvent(edict,connection,cursor)
-        if not success:
-            print 'Error inserting %s' % edict['eventcode']
-            sys.exit(1)
+        #now grab all of the events inside the folder!
+        eventfolders = os.listdir(folder)
+        for efolder in eventfolders:
+            eventfolder = os.path.join(folder,efolder)
+            eventfile = os.path.join(eventfolder,'input','event.xml')
+            if not os.path.isfile(eventfile):
+                continue
+            edict = parseEvent(eventfile)
+            if edict is None:
+                print 'Error parsing %s' % eventfile
+                continue
+            success = insertEvent(edict,connection,cursor)
+            if not success:
+                print 'Error inserting %s' % edict['eventcode']
+                sys.exit(1)
 
     cursor.close()
     connection.close()
