@@ -127,11 +127,11 @@ if __name__ == '__main__':
     for cname,cvalue in tabledef.iteritems():
         query = query + ' %s %s,' % (cname,cvalue)
         query = query[0:-1] + ')'
-        try:
-            cursor.execute(query)
-            connection.commit()
-        except Exception,msg:
-            print msg
+    try:
+        cursor.execute(query)
+        connection.commit()
+    except Exception,msg:
+        print msg
         
     folders = sys.argv[1:]
     for folder in folders:
