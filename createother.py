@@ -123,7 +123,7 @@ if __name__ == '__main__':
                    'magnitude':'float','time':'datetime'}
 
     print 'Creating %s...' % tabledef
-    query = 'CREATE TABLE %other ('
+    query = 'CREATE TABLE other ('
     for cname,cvalue in tabledef.iteritems():
         query = query + ' %s %s,' % (cname,cvalue)
         query = query[0:-1] + ')'
