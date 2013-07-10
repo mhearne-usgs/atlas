@@ -123,6 +123,9 @@ if __name__ == '__main__':
                    'magnitude':'float','time':'datetime'}
 
     print 'Creating %s...' % tabledef
+    query = 'DROP TABLE IF EXISTS other'
+    cursor.execute(query)
+    connection.commit()
     query = 'CREATE TABLE other ('
     for cname,cvalue in tabledef.iteritems():
         query = query + ' %s %s,' % (cname,cvalue)
