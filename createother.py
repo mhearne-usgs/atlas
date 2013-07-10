@@ -27,8 +27,8 @@ def insertEvent(eventdict,connection,cursor):
            eventdict['depth'],eventdict['mag'])
     query = fmt % tpl
     try:
-        self.cursor.execute(query)
-        self.connection.commit()
+        cursor.execute(query)
+        connection.commit()
     except:
         return False
     return True
