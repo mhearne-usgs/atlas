@@ -22,9 +22,7 @@ import MySQLdb as mysql
 CONFIGFILE = 'smconfig.ini'
 
 def insertEvent(eventdict,connection,cursor):
-    fmt = '''INSERT INTO other
-    (time,lat,lon,depth,magnitude,eid,ambflag) VALUES
-    ("%s",%.4f,%.4f,%.1f,%.1f,NULL,0)'''
+    fmt = '''INSERT INTO other(time,lat,lon,depth,magnitude,eid,ambflag) VALUES ("%s",%.4f,%.4f,%.1f,%.1f,NULL,0)'''
     tpl = (eventdict['time'],eventdict['lat'],eventdict['lon'],
            eventdict['depth'],eventdict['mag'])
     query = fmt % tpl
