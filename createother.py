@@ -93,7 +93,7 @@ def connect(configfile):
 if __name__ == '__main__':
     usage = 'Create PAGER-Cat other table from folder(s) of reviewed and approved ShakeMap data.'
     parser = argparse.ArgumentParser(description='Create PAGER-Cat other table.',usage=usage)
-    parser.add_argument('folders', metavar='FOLDERS', type=int, nargs='+',
+    parser.add_argument('folders', metavar='FOLDERS', nargs='+',
                         help='a list of folders containing ShakeMap data')
     parser.add_argument('--config', metavar='CONFIG',dest='configfile', nargs=1,
                         help='override the default config file')
