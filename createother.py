@@ -86,11 +86,17 @@ def connect(configfile):
     # password = atlas
     config = ConfigParser.ConfigParser()
     config.readfp(open(configfile,'rt'))
-    host = config.get('DATABASE','host')
+    host = None
+    if config.has_option('DATABASE','host'):
+        host = config.get('DATABASE','host')
     db = config.get('DATABASE','db')
     user = config.get('DATABASE','user')
     password = config.get('DATABASE','password')
-    connection = mysql.connect(passwd=password,db=db,user=user,host=host)
+    if host is not None:
+        connection = mysql.connect(passwd=password,db=db,user=user,host=host)
+    else:
+        #assume local connection
+        connection = mysql.connect(passwd=password,db=db,user=user)
     cursor = connection.cursor()
     return (connection,cursor)
 
