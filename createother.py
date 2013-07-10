@@ -128,10 +128,10 @@ if __name__ == '__main__':
         query = query + ' %s %s,' % (cname,cvalue)
         query = query[0:-1] + ')'
         try:
-            self.cursor.execute(query)
-            self.connection.commit()
+            cursor.execute(query)
+            connection.commit()
         except Exception,msg:
-            pass
+            print msg
         
     folders = sys.argv[1:]
     for folder in folders:
