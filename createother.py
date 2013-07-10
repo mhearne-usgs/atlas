@@ -122,8 +122,8 @@ if __name__ == '__main__':
                    'ambflag':'int','lat':'double','lon':'double','depth':'float',
                    'magnitude':'float','time':'datetime'}
 
-    print 'Creating %s...' % tablename
-    query = 'CREATE TABLE %s (' % tablename
+    print 'Creating %s...' % tabledef
+    query = 'CREATE TABLE %s (' % tabledef
     for cname,cvalue in tabledef.iteritems():
         query = query + ' %s %s,' % (cname,cvalue)
         query = query[0:-1] + ')'
