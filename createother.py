@@ -17,7 +17,7 @@ import math
 
 CONFIGFILE = 'smconfig.ini'
 
-def insertEvent(eventdict):
+def insertEvent(eventdict,connection,cursor):
     fmt = '''INSERT INTO other
     (time,lat,lon,depth,magnitude,eid,ambflag) VALUES
     ("%s",%.4f,%.4f,%.1f,%.1f,NULL,0)'''
@@ -75,9 +75,24 @@ def parseEvent(eventfile):
     dom.unlink()
     return eventdict
 
+def connect(configfile):
+    # host = igskcicgwsgm046.cr.usgs.gov
+    # db = atlas
+    # user = atlas
+    # password = atlas
+    config = ConfigParser.ConfigParser()
+    config.readfp(open(configfile,'rt'))
+    host = config.get('DATABASE','host')
+    db = config.get('DATABASE','db')
+    user = config.get('DATABASE','user')
+    password = config.get('DATABASE','password')
+    connection = mysql.connect(passwd=password,db=db,user=user,host=host)
+    cursor = connection.cursor()
+    return (connection,cursor)
+
 if __name__ == '__main__':
-    
-    parser = argparse.ArgumentParser(description='Process some integers.')
+    usage = 'Create PAGER-Cat other table from folder(s) of reviewed and approved ShakeMap data.'
+    parser = argparse.ArgumentParser(description='Create PAGER-Cat other table.',usage=usage)
     parser.add_argument('folders', metavar='FOLDERS', type=int, nargs='+',
                         help='an integer for the accumulator')
     parser.add_argument('--config', metavar='CONFIG',dest='configfile', nargs=1,
@@ -117,7 +132,7 @@ if __name__ == '__main__':
         if edict is None:
             print 'Error parsing %s' % eventfile
             continue
-        success = insertEvent(edict)
+        success = insertEvent(edict,connection,cursor)
         if not success:
             print 'Error inserting %s' % edict['eventcode']
             sys.exit(1)
