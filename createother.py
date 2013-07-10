@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import MySQLdb as mysql
+#stdlib imports
 import os.path
 import argparse
 import sys
@@ -14,6 +14,10 @@ import cStringIO
 import traceback
 import string
 import math
+import ConfigParser
+
+#third party imports
+import MySQLdb as mysql
 
 CONFIGFILE = 'smconfig.ini'
 
