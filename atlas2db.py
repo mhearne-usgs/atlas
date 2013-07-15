@@ -24,7 +24,7 @@ class DataBasePusher(object):
     def __init__(self,dbdict):
         atlas = dbdict['atlas']
         shakemap = dbdict['shakemap']
-        self.connection = mysql.connect(db=atlas['database'],user=atlas['user'],passwd=atlas['password'],host='177.0.0.1')
+        self.connection = mysql.connect(db=atlas['database'],user=atlas['user'],passwd=atlas['password'],host='127.0.0.1')
         self.cursor = self.connection.cursor()
         # self.shake_connection = mysql.connect(db=shakemap['database'],user=shakemap['user'],passwd=shakemap['password'])
         # self.shake_cursor = self.shake_connection.cursor()
