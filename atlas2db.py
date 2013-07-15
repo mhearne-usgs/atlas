@@ -24,7 +24,7 @@ class DataBasePusher(object):
     def __init__(self,dbdict):
         atlas = dbdict['atlas']
         shakemap = dbdict['shakemap']
-        self.connection = mysql.connect(db=atlas['database'],user=atlas['user'],passwd=atlas['password'])
+        self.connection = mysql.connect(db=atlas['database'],user=atlas['user'],passwd=atlas['password'],host='177.0.0.1')
         self.cursor = self.connection.cursor()
         # self.shake_connection = mysql.connect(db=shakemap['database'],user=shakemap['user'],passwd=shakemap['password'])
         # self.shake_cursor = self.shake_connection.cursor()
@@ -200,7 +200,7 @@ class DataBasePusher(object):
                 self.pushStations(eventid,stationlist,stationfile,created)
             #read in the command line flags and push to DB
             #flagdict = self.getProgramFlags(eventdict['eventcode'])
-            #self.pushFlags(eventid,flagdict)
+            #\self.pushFlags(eventid,flagdict)
             if os.path.isfile(faultfile):
                 (firstline,segments) = self.parseFaultFile(faultfile)
                 self.pushFault(eventid,segments,firstline,faultfile)
