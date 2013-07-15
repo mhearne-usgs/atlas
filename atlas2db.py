@@ -675,9 +675,6 @@ if __name__ == '__main__':
     pat = '\\d{%i}' % idlength #event folders should be a sequence of digits
     for f in allfolders:
         folder = os.path.join(atlasdir,f)
-        if not os.path.isdir(folder) or not re.match(pat,f):
-            continue
-
         eventfile = os.path.join(folder,'input','event.xml')
         if not os.path.isfile(eventfile):
             print 'No event.xml file for %s.  Skipping.' % f
