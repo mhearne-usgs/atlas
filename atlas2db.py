@@ -175,7 +175,7 @@ class DataBasePusher(object):
         
     def pushEvent(self,eventfile,configfiles,stationfiles,sourcefile,
                   faultfile,runfile,statusfile,shakehome,doUpdate,version,revision,
-                  dbdict):
+                  dbdict,skipBadStations=False):
         try:
             eventdict = self.parseEventFile(eventfile)
             if eventdict is None:
@@ -196,8 +196,15 @@ class DataBasePusher(object):
                 self.pushConfig(eventid,conflist,configfile,version,revision)
             #read in data files and push to DB
             for stationfile in stationfiles:
-                stationlist,created = self.parseStationFile(stationfile)
-                self.pushStations(eventid,stationlist,stationfile,created)
+                try:
+                    stationlist,created = self.parseStationFile(stationfile)
+                    self.pushStations(eventid,stationlist,stationfile,created)
+                except Exception,msg:
+                    print 'Failed to parse station data file %s.' % stationfile
+                    if skipBadStations:
+                        pass
+                    else:
+                        raise Exception,msg
             #read in the command line flags and push to DB
             #flagdict = self.getProgramFlags(eventdict['eventcode'])
             #\self.pushFlags(eventid,flagdict)
@@ -620,6 +627,9 @@ if __name__ == '__main__':
                       help="Provide ShakeMap revision number",metavar="REVISION")
     parser.add_option("-s", "--shakehome", dest="shakehome",
                       help="Inform the program about the root directory for the ShakeMap installation", metavar="SHAKEHOME")
+    parser.add_option("-k", "--skip-bad-stations",
+                      action="store_true", dest="skipBadStations", default=False,
+                      help="Skip over any station data that fails to parse")
     (options, args) = parser.parse_args()
 
     if options.shakehome is None:
@@ -706,7 +716,7 @@ if __name__ == '__main__':
         print 'Saving event %s' % f
         pusher.pushEvent(eventfile,configfiles,stationfiles,sourcefile,faultfile,runfile,
                          statusfile,options.shakehome,doUpdate,version,revision,
-                         dbdict['shakemap'])
+                         dbdict['shakemap'],skipBadStations=skipBadStations)
         
         
     pusher.close()
