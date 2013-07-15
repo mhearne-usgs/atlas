@@ -24,10 +24,10 @@ class DataBasePusher(object):
     def __init__(self,dbdict):
         atlas = dbdict['atlas']
         shakemap = dbdict['shakemap']
-        self.connection = mysql.connect(db=atlas['database'],user=atlas['user'],passwd=atlas['password'],buffered=True)
+        self.connection = mysql.connect(db=atlas['database'],user=atlas['user'],passwd=atlas['password'])
         self.cursor = self.connection.cursor()
-        self.shake_connection = mysql.connect(db=shakemap['database'],user=shakemap['user'],passwd=shakemap['password'])
-        self.shake_cursor = self.shake_connection.cursor()
+        # self.shake_connection = mysql.connect(db=shakemap['database'],user=shakemap['user'],passwd=shakemap['password'])
+        # self.shake_cursor = self.shake_connection.cursor()
 
     def createDB(self):
         warnings.filterwarnings("ignore", "Unknown table *")
@@ -199,8 +199,8 @@ class DataBasePusher(object):
                 stationlist,created = self.parseStationFile(stationfile)
                 self.pushStations(eventid,stationlist,stationfile,created)
             #read in the command line flags and push to DB
-            flagdict = self.getProgramFlags(eventdict['eventcode'])
-            self.pushFlags(eventid,flagdict)
+            #flagdict = self.getProgramFlags(eventdict['eventcode'])
+            #self.pushFlags(eventid,flagdict)
             if os.path.isfile(faultfile):
                 (firstline,segments) = self.parseFaultFile(faultfile)
                 self.pushFault(eventid,segments,firstline,faultfile)
@@ -409,8 +409,8 @@ class DataBasePusher(object):
     def close(self):
         self.cursor.close()
         self.connection.close()
-        self.shake_cursor.close()
-        self.shake_connection.close()
+        # self.shake_cursor.close()
+        # self.shake_connection.close()
 
     def parseEventFile(self,eventfile):
         try:

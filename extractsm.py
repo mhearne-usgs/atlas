@@ -9,16 +9,15 @@ import datetime
 import zipfile
 import shutil
 
-#local
-from losspager.io import shapefile
-from losspager.map.poly import PagerPolygon
-from losspager.map import geoserve
-from losspager.map import country
-from losspager.io import esri
-
 #third party
 import MySQLdb as mysql
 import numpy
+
+#third party (still me, though!)
+from pagerio import shapefile
+from pagermap.poly import PagerPolygon
+from pagermap import country
+from pagerio import esri
 
 CONFIGFILE = 'smconfig.ini'
 
@@ -67,6 +66,38 @@ created       CDATA   #REQUIRED
 </shakemap-data>
 '''
 
+def getLocStr(lat,lon):
+    MAX_DIST = 300
+    urlt = 'http://igskcicgvmbkora.cr.usgs.gov:8080/gs_dad/get_gs_info?latitude=%.4f&longitude=%.4f&utc=%s'
+    tstamp = datetime.datetime.utcnow().strftime('%m/%d/%Y:%H:%M:%S')
+    url = urlt % (lat,lon,tstamp)
+    locstr = '%.4f,%.4f' % (lat,lon)
+    try:
+        fh = urllib2.urlopen(url)
+        data = fh.read()
+        fh.close()
+        jdict = json.loads(data)
+        if jdict['cities'][0]['distance'] <= MAX_DIST:
+            dist = jdict['cities']['distance']
+            direc = jdict['cities']['direction']
+            cname = jdict['cities']['name']
+            locstr = '%i km %s of %s' % (dist,direc,cname)
+        else:
+            try:
+                locstr = jdict['fe']['longName']
+            except:
+                try:
+                    dist = jdict['cities'][0]['distance']
+                    direc = jdict['cities'][0]['direction']
+                    cname = jdict['cities']['name']
+                    locstr = sprintf('%i km %s of %s',dist,direc,cname)
+                except:
+                    pass
+    except:
+        pass
+    return locstr
+    
+
 class DataBaseSucker(object):
     connection = None
     cursor = None
@@ -99,7 +130,7 @@ class DataBaseSucker(object):
         self.writeSource(eventid,inputfolder)
         self.writeConfig(eventid,configfolder)
         self.writeRun(eventid,os.path.join(atlasdir,eventcode))
-
+        
     def writeRun(self,eventid,eventfolder):
         query = 'SELECT filename,content FROM atlas_run_file WHERE event_id=%i' % eventid
         self.cursor.execute(query)
@@ -325,9 +356,7 @@ def getMagnitude(cursor,eid):
 
     return magnitude
     
-def getEvents(cursor,options,config):
-    gs = geoserve.GeoServe()
-                             
+def getEvents(cursor,options,config,outfolder,sucker):
     if options.countryCode is not None:
         shpfile = config.get('FILES','country')
         shape = shapefile.PagerShapeFile(shpfile)
@@ -376,8 +405,8 @@ def getEvents(cursor,options,config):
             depth = row[3]
             time = row[4]
 
-        location = gs.getRegionName(lat,lon)
-            
+        location = getLocStr(lat,lon)
+                    
         magnitude = getMagnitude(cursor,eid)
         if magnitude is None:
             magnitude = row[5]
@@ -392,7 +421,9 @@ def getEvents(cursor,options,config):
         else:
             eventlist.append({'eventid':eid,'lat':lat,'lon':lon,'depth':depth,'time':time,'magnitude':magnitude,'loc':location})
         idx += 1
-
+        eventfolder = os.path.join(outfolder,time.strftime('%Y%m%d%H%M%S'))
+        sucker.writeShakeMapData(eventfolder,eid)
+        
     return eventlist
 
 def generateConfig(configfile):
@@ -411,7 +442,7 @@ def generateConfig(configfile):
     config.write(f)
     f.close()
 
-def main(options,config):
+def main(options,arguments,config):
     config.readfp(open(configfile))
     sections = config.sections()
 
@@ -436,14 +467,14 @@ def main(options,config):
     cursor = connection.cursor()
 
     sucker = DataBaseSucker(connection,cursor)
-    
-    eventlist = getEvents(cursor,options,config)
-    shakezip = createShakeInput(eventlist,options,sucker)
-    cursor.close()
-    connection.close()
+    outfolder = arguments[0]
+    if not os.path.isdir(outfolder):
+        os.makedirs(outfolder)
+    eventlist = getEvents(cursor,options,config,outfolder,sucker)
+    sucker.close()
     
 if __name__ == '__main__':
-    usage = usage = "usage: %prog [options]"
+    usage = usage = "usage: %prog [options] outfolder"
     parser = optparse.OptionParser(usage=usage)
     parser.add_option("-c", "--country", dest="countryCode",
                       help="Extract events from within country COUNTRY", metavar="COUNTRY")
@@ -474,7 +505,7 @@ if __name__ == '__main__':
         sys.exit(1)
     
     config = ConfigParser.ConfigParser()
-    main(options,config)    
+    main(options,args,config)    
     
     
     

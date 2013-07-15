@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import mysql.connector as mysql
+import MySQLdb as mysql
 import os.path
 from optparse import OptionParser
 import sys
@@ -8,18 +8,53 @@ import datetime
 import time
 from atlas2db import getDataBaseConnections
 
+DEFAULT_RUN = """
+/opt/local/ShakeMap/bin/../bin/grind -event EVENTCODE -qtm -xml -lonspan 4.0 -psa 
+/opt/local/ShakeMap/bin/../bin/mapping -event EVENTCODE -timestamp -itopo -gsm -pgminten
+/opt/local/ShakeMap/bin/../bin/plotregr -event EVENTCODE -lab_dev 6 -psa
+/opt/local/ShakeMap/bin/../bin/genex -event EVENTCODE -zip -metadata -shape shape -shape hazus
+"""
+
 class DataBaseSucker(object):
     connection = None
     cursor = None
-    shake_connection = None
-    shake_cursor = None
+
+    def getLocation(self,lat,lon):
+        MAX_DIST = 300
+        urlt = 'http://igskcicgvmbkora.cr.usgs.gov:8080/gs_dad/get_gs_info?latitude=%.4f&longitude=%.4f&utc=%s'
+        tstamp = datetime.datetime.utcnow().strftime('%m/%d/%Y:%H:%M:%S')
+        url = urlt % (lat,lon,tstamp)
+        locstr = '%.4f,%.4f' % (lat,lon)
+        try:
+            fh = urllib2.urlopen(url)
+            data = fh.read()
+            fh.close()
+            jdict = json.loads(data)
+            if jdict['cities'][0]['distance'] <= MAX_DIST:
+                dist = jdict['cities']['distance']
+                direc = jdict['cities']['direction']
+                cname = jdict['cities']['name']
+                locstr = '%i km %s of %s' % (dist,direc,cname)
+            else:
+                try:
+                    locstr = jdict['fe']['longName']
+                except:
+                    try:
+                        dist = jdict['cities'][0]['distance']
+                        direc = jdict['cities'][0]['direction']
+                        cname = jdict['cities']['name']
+                        locstr = sprintf('%i km %s of %s',dist,direc,cname)
+                    except:
+                        pass
+        except:
+            pass
+        return locstr
+
     def __init__(self,dbdict):
         atlas = dbdict['atlas']
         shakemap = dbdict['shakemap']
         self.connection = mysql.connect(db=atlas['database'],user=atlas['user'],passwd=atlas['password'])
         self.cursor = self.connection.cursor()
-        self.shake_connection = mysql.connect(db=shakemap['database'],user=shakemap['user'],passwd=shakemap['password'])
-        self.shake_cursor = self.shake_connection.cursor()
 
     def listEvents(self):
         query = 'SELECT eventcode FROM atlas_event'
@@ -28,41 +63,75 @@ class DataBaseSucker(object):
         for row in rows:
             print row[0]
 
-    def writeEvents(self,atlasdir,options,events):
-        query = 'SELECT id,eventcode,lat,lon,depth,magnitude,time,timezone,locstring,created,type,network,inserttime FROM atlas_event'
-        if len(events):
-            query = query + ' WHERE eventcode = "' + '" OR eventcode = "'.join(events) + '"'
-
+    def writeEvents(self,atlasdir,options):
+        query = 'SELECT id,code,lat,lon,depth,magnitude,time FROM event order by time'
         self.cursor.execute(query)
         for row in self.cursor.fetchall():
-            eventid = row[0]
+            eid = row[0]
             eventcode = row[1]
-            print 'Writing atlas data for %s' % eventcode
-            inputfolder = os.path.join(atlasdir,eventcode,'input')
-            configfolder = os.path.join(atlasdir,eventcode,'config')
-            try:
+            print 'Writing event data for %s' % eventcode
+            query2 = 'SELECT id,eventcode,lat,lon,depth,magnitude,time,timezone,locstring,created,type,network,inserttime FROM atlas_event WHERE eid=%i' % eid
+            nrows = self.cursor.execute(query2)
+            if not nrows:
+                row = list(row)
+                row.append('GMT')
+                row.append(self.getLocation(row[2],row[3]))
+                row.append(datetime.datetime.now())
+                row.append('')
+                row.append('us')
+                row.append(time.time())
+                inputfolder = os.path.join(atlasdir,eventcode,'input')
                 if not os.path.isdir(inputfolder):
                     os.makedirs(inputfolder)
-                if not os.path.isdir(configfolder):
-                    os.makedirs(configfolder)
-            except:
-                print 'Unable to create input or config folder %s.  Stopping.' % (inputfolder,configfolder)
-                self.close()
-                sys.exit(0)
-            self.writeEventFile(inputfolder,row)
-            if not options.noData:
-                self.writeStationList(eventid,inputfolder)
-            if not options.noFault:
-                self.writeFaultFile(eventid,inputfolder)
-            if not options.noSource:
-                self.writeSource(eventid,inputfolder)
-            if not options.noProgFlags:
-                self.writeFlags(eventid)
-            if not options.noConfig:
-                self.writeConfig(eventid,configfolder)
-            if not options.noRun:
-                self.writeRun(eventid,os.path.join(atlasdir,eventcode))
-
+                self.writeEventFile(inputfolder,row)
+                runfile = os.path.join(os.path.join(atlasdir,eventcode),'RUN_%s' % eventcode)
+                f = open(runfile,'wt')
+                f.write(DEFAULT_RUN.strip().replace('EVENTCODE',eventcode))
+                f.close()
+                statusfile = os.path.join(atlasdir,eventcode,'status.txt')
+                f = open(statusfile,'wt')
+                f.write('Status: Automatic\n')
+                f.close()
+                continue
+            for row in self.cursor.fetchall():
+                eventid = row[0]
+                eventcode = row[1]
+                inputfolder = os.path.join(atlasdir,eventcode,'input')
+                configfolder = os.path.join(atlasdir,eventcode,'config')
+                try:
+                    if not os.path.isdir(inputfolder):
+                        os.makedirs(inputfolder)
+                    if not os.path.isdir(configfolder):
+                        os.makedirs(configfolder)
+                except:
+                    print 'Unable to create input or config folder %s.  Stopping.' % (inputfolder,configfolder)
+                    self.close()
+                    sys.exit(0)
+                self.writeEventFile(inputfolder,row)
+                self.writeStatus(atlasdir,eventid)
+                if not options.noData:
+                    self.writeStationList(eventid,inputfolder)
+                if not options.noFault:
+                    self.writeFaultFile(eventid,inputfolder)
+                if not options.noSource:
+                    self.writeSource(eventid,inputfolder)
+                if not options.noConfig:
+                    self.writeConfig(eventid,configfolder)
+                if not options.noRun:
+                    self.writeRun(eventid,os.path.join(atlasdir,eventcode))
+                
+    def writeStatus(self,atlasdir,eventid):
+        statusfile = os.path.join(atlasdir,'status.txt')
+        query = 'SELECT statuskey,statusvalue FROM atlas_status WHERE event_id=%i' % eventid
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        if not len(rows):
+            return
+        f = open(statusfile,'wt')
+        for row in rows:
+            f.write('%s: %s\n',row[0],row[1])
+        f.close()
+        
     def writeRun(self,eventid,eventfolder):
         query = 'SELECT filename,content FROM atlas_run_file WHERE event_id=%i' % eventid
         self.cursor.execute(query)
@@ -90,25 +159,6 @@ class DataBaseSucker(object):
                 value = trow[1]
                 f.write('%s = %s\n' % (param,value))
             f.close()
-
-    def writeFlags(self,eventid):
-        query = 'SELECT eventcode FROM atlas_event WHERE id=%i' % eventid
-        self.cursor.execute(query)
-        eventcode = self.cursor.fetchone()[0]
-        query = 'SELECT MAX(version) FROM shake_runs WHERE evid="%s"' % eventcode
-        self.shake_cursor.execute(query)
-        maxversion = self.shake_cursor.fetchone()[0]
-        query = 'SELECT program,flags FROM atlas_prog_flags WHERE event_id=%i' % eventid
-        self.cursor.execute(query)
-        rows = self.cursor.fetchall()
-        for row in rows:
-            program = row[0]
-            flags = row[1]
-            lastrun = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            fmt = 'INSERT INTO shake_runs (evid,program,lastrun,version,flags) VALUES ("%s","%s","%s",%i,"%s")'
-            tpl = (eventcode,program,lastrun,maxversion+1,flags)
-            self.shake_cursor.execute(fmt % tpl)
-            self.shake_connection.commit()
 
     def writeSource(self,eventid,inputfolder):
         query = 'SELECT sourcekey,sourcevalue FROM atlas_source WHERE event_id=%i' % eventid
@@ -155,7 +205,11 @@ class DataBaseSucker(object):
         minute = row[6].minute
         second = row[6].second
         created = time.mktime(row[9].timetuple())
-        otime = time.mktime(row[6].timetuple())
+        try:
+            otime = time.mktime(row[6].timetuple())
+        except:
+            dt = datetime.datetime(1970,1,1,0,0,0) - row[6]
+            otime = -1*(dt.days*86400 + dt.seconds)
         f = open(eventfile,'wt')
         f.write('<?xml version="1.0" encoding="US-ASCII" standalone="yes"?>\n')
         fmt = '''<earthquake id="%s" lat="%.4f" lon="%.4f" mag="%.1f"
@@ -202,7 +256,12 @@ class DataBaseSucker(object):
                     for urow in self.cursor.fetchall():
                         key = urow[0]
                         value = urow[1]
-                        f.write('<%s value="%.4f"/>\n' % (key,value))
+                        if value is None:
+                            value = float('nan')
+                        try:
+                            f.write('<%s value="%.4f"/>\n' % (key,value))
+                        except:
+                            pass
                     f.write('</comp>\n')
                 f.write('</station>\n')
             f.write('</stationlist>\n')
@@ -213,8 +272,7 @@ class DataBaseSucker(object):
     def close(self):
         self.cursor.close()
         self.connection.close()
-        self.shake_cursor.close()
-        self.shake_connection.close()
+        
 
 if __name__ == '__main__':
     usage = "usage: %prog [options] atlasdir [eventcode1 eventcode2]"
@@ -261,5 +319,5 @@ if __name__ == '__main__':
         sys.exit(0)
     
     atlasdir = args[0]
-    sucker.writeEvents(atlasdir,options,events)
+    sucker.writeEvents(atlasdir,options)
     sucker.close()
