@@ -126,7 +126,7 @@ if __name__ == '__main__':
     if os.path.isdir(rootfolder):
         events = parseFolder(rootfolder,startdate,enddate)
     else:
-        print 'Root folder "%s" is not a directory'
+        print 'Root folder "%s" is not a directory' % rootfolder
         sys.exit(1)
 
     myzip = zipfile.ZipFile('constrained.zip','w',zipfile.ZIP_DEFLATED)
