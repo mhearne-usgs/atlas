@@ -11,6 +11,8 @@ import math
 import zipfile
 import glob
 
+MAGTHRESH = 5.5
+
 def parseEvent(eventxml):
     event = {}
     dom = minidom.parse(eventxml)
@@ -28,7 +30,7 @@ def parseEvent(eventxml):
     return event
 
 def parseInfo(infoxml):
-    event = {'hasbias':False,'hasfault':False}
+    event = {'hasbias':False,'hasfault':False,'hashigh':False}
     dom = minidom.parse(infoxml)
     tags = dom.getElementsByTagName('tag')
     for tag in tags:
@@ -42,6 +44,10 @@ def parseInfo(infoxml):
             value = tag.getAttribute('value')
             if len(value.strip()):
                 event['hasfault'] = True
+        if name == 'mi_max':
+            value = float(tag.getAttribute('value'))
+            if value >= 5.5:
+                event['hashigh'] = True
     dom.unlink()
     return event
 
@@ -124,7 +130,7 @@ if __name__ == '__main__':
     myzip = zipfile.ZipFile('constrained.zip','w',zipfile.ZIP_DEFLATED)
     for event in events:
         print event['folder']
-        if event['hasbias'] or event['hasfault']:
+        if (event['hasbias'] or event['hasfault']) and event['hashigh']:
             filenames = getFiles(event['folder'])
             p1,f1 = os.path.split(event['folder'])
             for filename in filenames:
