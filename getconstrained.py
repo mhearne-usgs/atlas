@@ -44,7 +44,7 @@ def parseInfo(infoxml):
             value = tag.getAttribute('value')
             if len(value.strip()):
                 event['hasfault'] = True
-        if name == 'mi_max':
+        if name == 'mi_max' or name == 'mmi_max':
             value = float(tag.getAttribute('value'))
             if value >= 5.5:
                 event['hashigh'] = True
