@@ -68,6 +68,8 @@ def parseFolder(rootfolder,startdate,enddate):
         if not os.path.isfile(infoxml):
             continue
         event = parseInfo(infoxml)
+        if event['hashigh']:
+            pass
         event['folder'] = eventfolder
         events.append(copy.deepcopy(event))
     return events
