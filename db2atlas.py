@@ -292,9 +292,6 @@ if __name__ == '__main__':
     parser.add_option("-s", "--nosource",
                       action="store_true", dest="noSource", default=False,
                       help="Do not write source.txt file")
-    parser.add_option("-p", "--noprogflags",
-                      action="store_true", dest="noProgFlags", default=False,
-                      help="Do not write program flags to database")
     parser.add_option("-a", "--shakehome", dest="shakehome",
                       help="Inform the program about the root directory for the ShakeMap installation", metavar="SHAKEHOME")
     parser.add_option("-l", "--listevents",
