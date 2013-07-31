@@ -129,7 +129,7 @@ class DataBaseSucker(object):
             return
         f = open(statusfile,'wt')
         for row in rows:
-            f.write('%s: %s\n',row[0],row[1])
+            f.write('%s: %s\n'% (row[0],row[1]))
         f.close()
         
     def writeRun(self,eventid,eventfolder):
