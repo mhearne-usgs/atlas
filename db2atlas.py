@@ -193,7 +193,10 @@ class DataBaseSucker(object):
         rows = self.cursor.fetchall()
         rows = sorted(rows,key=lambda row:row[0]) #sort by seqno
         for row in rows:
-            f.write('%.4f %.4f %.4f\n' % (row[1],row[2],row[3]))
+            try:
+                f.write('%.4f %.4f %.4f\n' % (row[1],row[2],row[3]))
+            except:
+                pass
         f.close()
 
     def writeEventFile(self,inputfolder,row):
