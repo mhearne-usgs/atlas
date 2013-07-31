@@ -57,11 +57,11 @@ class DataBaseSucker(object):
         self.cursor = self.connection.cursor()
 
     def listEvents(self):
-        query = 'SELECT eventcode FROM atlas_event'
+        query = 'SELECT time from event'
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
         for row in rows:
-            print row[0]
+            print row[0].strftime('%Y%m%d%H%M%S')
 
     def writeEvents(self,atlasdir,options):
         query = 'SELECT id,code,lat,lon,depth,magnitude,time FROM event order by time'
