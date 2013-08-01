@@ -84,7 +84,7 @@ class DataBaseSucker(object):
                 if not os.path.isdir(inputfolder):
                     os.makedirs(inputfolder)
                 self.writeEventFile(inputfolder,row)
-                runfile = os.path.join(os.path.join(atlasdir,eventcode),'RUN_%s' % eventcode)
+                runfile = os.path.join(os.path.join(atlasdir,eventcode,'RUN_%s' % eventcode))
                 f = open(runfile,'wt')
                 f.write(DEFAULT_RUN.strip().replace('EVENTCODE',eventcode))
                 f.close()
