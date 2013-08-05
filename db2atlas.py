@@ -157,7 +157,7 @@ class DataBaseSucker(object):
             for trow in self.cursor.fetchall():
                 param = trow[0]
                 value = trow[1]
-                f.write('%s = %s\n' % (param,value))
+                f.write('%s : %s\n' % (param,value))
             f.close()
 
     def writeSource(self,eventid,inputfolder):
