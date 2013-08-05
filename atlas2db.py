@@ -693,9 +693,9 @@ if __name__ == '__main__':
         configfiles = glob.glob(folder+'/config/*.conf')
         stationfiles = glob.glob(folder+'/input/*_dat.xml')
         faultfile = glob.glob(folder+'/input/*_fault.txt')
-        runfiles = glob.glob(folder+'/run_*.txt')
+        runfiles = glob.glob(folder+'/run_*')
         if not len(runfiles):
-            runfiles = glob.glob(folder+'/RUN_*.txt')
+            runfiles = glob.glob(folder+'/RUN_*')
         if len(runfiles):
             runfile = runfiles[0]
         else:
