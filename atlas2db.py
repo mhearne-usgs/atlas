@@ -233,10 +233,11 @@ class DataBasePusher(object):
             shakehome = shakehome[0:-1] + os.path.sep
         else:
             shakehome = shakehome + os.path.sep
-        template = ['<shakehome>grind -event <eventid> -lonspan <lonspan> <psa> -qtm -xml -nativesc -nooutlier',
-                    '<shakehome>mapping -event <eventid> -timestamp -itopo -gsm -pgminten',
-                    '<shakehome>plotregr -event <eventid> <psa> -lab_dev 6',
-                    '<shakehome>genex -event <eventid> -zip -metadata -shape shape -shape hazus']
+        binfolder = os.path.join(shakehome,'bin')+os.path.sep
+        template = ['<binfolder>grind -event <eventid> -lonspan <lonspan> <psa> -qtm -xml -nativesc -nooutlier',
+                    '<binfolder>mapping -event <eventid> -timestamp -itopo -gsm -pgminten',
+                    '<binfolder>plotregr -event <eventid> <psa> -lab_dev 6',
+                    '<binfolder>genex -event <eventid> -zip -metadata -shape shape -shape hazus']
         if mag < 5:
             lonspan = '3'
         if mag >= 5 and mag < 6:
@@ -252,7 +253,7 @@ class DataBasePusher(object):
             line = line.replace('<lonspan>',lonspan)
             line = line.replace('<psa>',psa)
             line = line.replace('<eventid>',eventcode)
-            line = line.replace('<shakehome>',shakehome)
+            line = line.replace('<binfolder>',binfolder)
             runcontent = runcontent + line + '\n'
         runfile = 'RUN_'+eventcode
         return runcontent,runfile
