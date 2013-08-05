@@ -84,7 +84,7 @@ class DataBaseSucker(object):
                 if not os.path.isdir(inputfolder):
                     os.makedirs(inputfolder)
                 self.writeEventFile(inputfolder,row)
-                runfile = os.path.join(os.path.join(atlasdir,eventcode,'RUN_%s' % eventcode))
+                runfile = os.path.join(os.path.join(atlasdir,eventcode,'RUN_%s' % eventcode)
                 f = open(runfile,'wt')
                 f.write(DEFAULT_RUN.strip().replace('EVENTCODE',eventcode))
                 f.close()
@@ -136,7 +136,7 @@ class DataBaseSucker(object):
         query = 'SELECT filename,content FROM atlas_run_file WHERE event_id=%i' % eventid
         self.cursor.execute(query)
         row = self.cursor.fetchone()
-        runfile = row[0]
+        runfile = os.path.join(eventfolder,row[0])
         runcontent = row[1]
         f = open(runfile,'wt')
         f.write(runcontent)
