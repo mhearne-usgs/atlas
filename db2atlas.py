@@ -15,6 +15,9 @@ DEFAULT_RUN = """
 /opt/local/ShakeMap/bin/../bin/genex -event EVENTCODE -zip -metadata -shape shape -shape hazus
 """
 
+MAGHIERARCHY = ['atlas_event','other','cmt','pde-Mw','centennial','pde']
+LOCHIERARCHY = ['atlas_event','other','centennial','pde','noaa']
+
 class DataBaseSucker(object):
     connection = None
     cursor = None
@@ -63,27 +66,94 @@ class DataBaseSucker(object):
         for row in rows:
             print row[0].strftime('%Y%m%d%H%M%S')
 
+    def getHypocenter(self,eid):
+        #now loop through contributing tables, looking for the best location/magnitude
+        foundLocation = False
+        idx = 0
+        lat = None
+        lon = None
+        depth = None
+        time = None
+        for table in LOCHIERARCHY:
+            query = 'SELECT lat,lon,depth,time FROM %s WHERE eid = %i' % (table,eid)
+            try:
+                self.cursor.execute(query)
+            except:
+                pass
+            lrow = self.cursor.fetchone()
+            if lrow is None:
+                continue
+            else:
+                lat = lrow[0]
+                lon = lrow[1]
+                depth = lrow[2]
+                time = lrow[3]
+                break
+
+        return (lat,lon,depth,time)
+
+            
+    def getMagnitude(self,eid):
+        foundMagnitude = False
+        idx = 0
+        magnitude = None
+        for table in MAGHIERARCHY:
+            if table.find('Mw') > -1: #we're looking at PDE
+                parts = table.split('-')
+                table = parts[0]
+                magtype = parts[1]
+                query = 'SELECT magnitude FROM pde WHERE (magtype = "Mw" or magc1type = "Mw" or magc2type = "Mw") and eid=%i' % eid
+                self.cursor.execute(query)
+                lrow = self.cursor.fetchone()
+                if lrow is None:
+                    continue
+                else:
+                    magnitude = lrow[0]
+                    break
+            else:
+                query = 'SELECT magnitude from %s WHERE eid = %i' % (table,eid)
+                self.cursor.execute(query)
+                lrow = cursor.fetchone()
+                if lrow is None:
+                    continue
+                else:
+                    magnitude = lrow[0]
+                    break
+
+        return magnitude
+            
     def writeEvents(self,atlasdir,options):
-        query = 'SELECT id,code,lat,lon,depth,magnitude,time FROM event order by time'
+        query = 'SELECT id FROM event order by time'
+        #query = 'SELECT id,code,lat,lon,depth,magnitude,time FROM event order by time'
         self.cursor.execute(query)
         for row in self.cursor.fetchall():
+            eventdict = {}
             eid = row[0]
-            eventcode = row[1]
+            lat,lon,depth,time = self.getHypocenter(eid)
+            magnitude = self.getMagnitude(eid)
+            eventcode = time.strftime('%Y%m%d%H%M%S')
+            
+            eventdict['lat'] = lat
+            eventdict['lon'] = lon
+            eventdict['depth'] = depth
+            eventdict['time'] = time
+            eventdict['mag'] = magnitude
+            eventdict['eventcode'] = eventcode
+
             print 'Writing event data for %s' % eventcode
-            query2 = 'SELECT id,eventcode,lat,lon,depth,magnitude,time,timezone,locstring,created,type,network,inserttime FROM atlas_event WHERE eid=%i' % eid
+            query2 = 'SELECT id,timezone,locstring,created,type,network FROM atlas_event WHERE eid=%i' % eid
             nrows = self.cursor.execute(query2)
+            #this section handles events that are NOT in the atlas_event table
             if not nrows:
-                row = list(row)
-                row.append('GMT')
-                row.append(self.getLocation(row[2],row[3]))
-                row.append(datetime.datetime.now())
-                row.append('')
-                row.append('us')
-                row.append(time.time())
+                eventdict['timezone'] = 'GMT'
+                eventdict['locstring'] = self.getLocation(lat,lon)
+                eventdict['created'] = datetime.datetime.now()
+                eventdict['type'] = ''
+                eventdict['network'] = 'us'
                 inputfolder = os.path.join(atlasdir,eventcode,'input')
                 if not os.path.isdir(inputfolder):
                     os.makedirs(inputfolder)
-                self.writeEventFile(inputfolder,row)
+                self.writeEventFile(inputfolder,eventdict)
                 runfile = os.path.join(os.path.join(atlasdir,eventcode,'RUN_%s' % eventcode))
                 f = open(runfile,'wt')
                 f.write(DEFAULT_RUN.strip().replace('EVENTCODE',eventcode))
@@ -93,9 +163,14 @@ class DataBaseSucker(object):
                 f.write('Status: Automatic\n')
                 f.close()
                 continue
+            #this section handles events that ARE in the atlas_event table
             for row in self.cursor.fetchall():
                 eventid = row[0]
-                eventcode = row[1]
+                eventdict['timezone'] = row[1]
+                eventdict['locstring'] = row[2]
+                eventdict['created'] = row[3]
+                eventdict['type'] = row[4]
+                eventdict['network'] = row[5]
                 inputfolder = os.path.join(atlasdir,eventcode,'input')
                 configfolder = os.path.join(atlasdir,eventcode,'config')
                 try:
@@ -107,7 +182,7 @@ class DataBaseSucker(object):
                     print 'Unable to create input or config folder %s.  Stopping.' % (inputfolder,configfolder)
                     self.close()
                     sys.exit(0)
-                self.writeEventFile(inputfolder,row)
+                self.writeEventFile(inputfolder,eventdict)
                 self.writeStatus(atlasdir,eventid)
                 if not options.noData:
                     self.writeStationList(eventid,inputfolder)
@@ -203,26 +278,35 @@ class DataBaseSucker(object):
                 pass
         f.close()
 
-    def writeEventFile(self,inputfolder,row):
+    def writeEventFile(self,inputfolder,eventdict):
         eventfile = os.path.join(inputfolder,'event.xml')
-        year = row[6].year
-        month = row[6].month
-        day = row[6].day
-        hour = row[6].hour
-        minute = row[6].minute
-        second = row[6].second
-        created = time.mktime(row[9].timetuple())
+        year = eventdict['time'].year
+        month = eventdict['time'].month
+        day = eventdict['time'].day
+        hour = eventdict['time'].hour
+        minute = eventdict['time'].minute
+        second = eventdict['time'].second
+        created = time.mktime(eventdict['created'].timetuple())
         try:
-            otime = time.mktime(row[6].timetuple())
+            otime = time.mktime(eventdict['created'].timetuple())
         except:
-            dt = datetime.datetime(1970,1,1,0,0,0) - row[6]
+            dt = datetime.datetime(1970,1,1,0,0,0) - eventdict['created']
             otime = -1*(dt.days*86400 + dt.seconds)
         f = open(eventfile,'wt')
         f.write('<?xml version="1.0" encoding="US-ASCII" standalone="yes"?>\n')
         fmt = '''<earthquake id="%s" lat="%.4f" lon="%.4f" mag="%.1f"
         year="%4i" month="%2i" day="%2i" hour="%2i" minute="%2i" second="%2i" timezone="%s"
         depth="%.1f" locstring="%s" created="%i" otime="%i" type="%s" network="%s"/>\n'''
-        tpl = (row[1],row[2],row[3],row[5],year,month,day,hour,minute,second,row[7],row[4],row[8],created,otime,row[10],row[11])
+        ecode = eventdict['eventcode']
+        lat = eventdict['lat']
+        lon = eventdict['lon']
+        mag = eventdict['mag']
+        tzone = eventdict['timezone']
+        depth = eventdict['depth']
+        etype = eventdict['type']
+        net = eventdict['network']
+        locstring = eventdict['locstring']
+        tpl = (ecode,lat,lon,mag,year,month,day,hour,minute,second,tzone,depth,locstring,created,otime,etype,net)
         f.write(fmt % tpl)
         f.close()
 
