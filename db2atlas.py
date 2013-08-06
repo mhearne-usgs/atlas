@@ -23,7 +23,7 @@ DEFAULT_RUN = """
 /opt/local/ShakeMap/bin/genex -event EVENTCODE -zip -metadata -shape shape -shape hazus
 """
 
-MAGHIERARCHY = ['atlas_event','other','cmt','pde-Mw','centennial','pde']
+MAGHIERARCHY = ['atlas_event','other','cmt','pde-Mw','pdeisc-Mw','centennial','pde','pdeisc']
 LOCHIERARCHY = ['atlas_event','other','centennial','pde','noaa']
 
 class DataBaseSucker(object):
@@ -110,7 +110,7 @@ class DataBaseSucker(object):
                 parts = table.split('-')
                 table = parts[0]
                 magtype = parts[1]
-                query = 'SELECT magnitude FROM pde WHERE (magtype = "Mw" or magc1type = "Mw" or magc2type = "Mw") and eid=%i' % eid
+                query = 'SELECT magnitude FROM %s WHERE (magtype = "Mw" or magc1type = "Mw" or magc2type = "Mw") and eid=%i' % (table,eid)
                 self.cursor.execute(query)
                 lrow = self.cursor.fetchone()
                 if lrow is None:
