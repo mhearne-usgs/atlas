@@ -302,7 +302,7 @@ class DataBaseSucker(object):
             otime = -1*(dt.days*86400 + dt.seconds)
         f = open(eventfile,'wt')
         f.write('<?xml version="1.0" encoding="US-ASCII" standalone="yes"?>\n')
-        fmt = '''<earthquake id="%s" lat="%.4f" lon="%.4f" mag="%.1f" year="%4i" month="%2i" day="%2i" hour="%2i" minute="%2i" second="%2i" timezone="%s" depth="%.1f" locstring="%s" created="%i" otime="%i" type="%s" network="%s"/>\n'''
+        fmt = '''<earthquake id="%s" lat="%.4f" lon="%.4f" mag="%.1f" year="%4i" month="%02i" day="%02i" hour="%02i" minute="%02i" second="%02i" timezone="%s" depth="%.1f" locstring="%s" created="%i" otime="%i" type="%s" network="%s"/>\n'''
         ecode = eventdict['eventcode']
         lat = eventdict['lat']
         lon = eventdict['lon']
