@@ -7,6 +7,7 @@ import sys
 import datetime
 import time
 from atlas2db import getDataBaseConnections
+import urllib2
 
 DEFAULT_RUN = """
 /opt/local/ShakeMap/bin/../bin/grind -event EVENTCODE -qtm -xml -lonspan 4.0 -psa 
