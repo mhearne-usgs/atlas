@@ -296,9 +296,9 @@ class DataBaseSucker(object):
         second = eventdict['time'].second
         created = time.mktime(eventdict['created'].timetuple())
         try:
-            otime = time.mktime(eventdict['created'].timetuple())
+            otime = time.mktime(eventdict['time'].timetuple())
         except:
-            dt = datetime.datetime(1970,1,1,0,0,0) - eventdict['created']
+            dt = datetime.datetime(1970,1,1,0,0,0) - eventdict['time']
             otime = -1*(dt.days*86400 + dt.seconds)
         f = open(eventfile,'wt')
         f.write('<?xml version="1.0" encoding="US-ASCII" standalone="yes"?>\n')
