@@ -139,7 +139,10 @@ class DataBaseSucker(object):
             eid = row[0]
             lat,lon,depth,time = self.getHypocenter(eid)
             magnitude = self.getMagnitude(eid)
-            eventcode = time.strftime('%Y%m%d%H%M%S')
+            try:
+                eventcode = time.strftime('%Y%m%d%H%M%S')
+            except:
+                pass
             
             eventdict['lat'] = lat
             eventdict['lon'] = lon
