@@ -24,7 +24,7 @@ DEFAULT_RUN = """
 """
 
 MAGHIERARCHY = ['atlas_event','other','cmt','pde-Mw','pdeisc-Mw','centennial','pde','pdeisc']
-LOCHIERARCHY = ['atlas_event','other','centennial','pde','noaa']
+LOCHIERARCHY = ['atlas_event','other','centennial','pde','pdeisc','noaa']
 
 class DataBaseSucker(object):
     connection = None
