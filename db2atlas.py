@@ -17,10 +17,10 @@ from atlas2db import getDataBaseConnections
 
 
 DEFAULT_RUN = """
-/opt/local/ShakeMap/bin/../bin/grind -event EVENTCODE -qtm -xml -lonspan 4.0 -psa 
-/opt/local/ShakeMap/bin/../bin/mapping -event EVENTCODE -timestamp -itopo -gsm -pgminten
-/opt/local/ShakeMap/bin/../bin/plotregr -event EVENTCODE -lab_dev 6 -psa
-/opt/local/ShakeMap/bin/../bin/genex -event EVENTCODE -zip -metadata -shape shape -shape hazus
+/opt/local/ShakeMap/bin/grind -event EVENTCODE -qtm -xml -lonspan 4.0 -psa 
+/opt/local/ShakeMap/bin/mapping -event EVENTCODE -timestamp -itopo -gsm -pgminten
+/opt/local/ShakeMap/bin/plotregr -event EVENTCODE -lab_dev 6 -psa
+/opt/local/ShakeMap/bin/genex -event EVENTCODE -zip -metadata -shape shape -shape hazus
 """
 
 MAGHIERARCHY = ['atlas_event','other','cmt','pde-Mw','centennial','pde']
