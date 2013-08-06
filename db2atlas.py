@@ -131,13 +131,19 @@ class DataBaseSucker(object):
         return magnitude
             
     def writeEvents(self,atlasdir,options):
-        query = 'SELECT id FROM event order by time'
-        #query = 'SELECT id,code,lat,lon,depth,magnitude,time FROM event order by time'
+        #query = 'SELECT id FROM event order by time'
+        query = 'SELECT id,code,lat,lon,depth,magnitude,time FROM event order by time'
         self.cursor.execute(query)
         for row in self.cursor.fetchall():
             eventdict = {}
             eid = row[0]
             lat,lon,depth,time = self.getHypocenter(eid)
+            if lat is None:
+                lat = row[2]
+            if lon is None:
+                lon = row[3]
+            if depth is None:
+                depth = row[4]
             magnitude = self.getMagnitude(eid)
             try:
                 eventcode = time.strftime('%Y%m%d%H%M%S')
