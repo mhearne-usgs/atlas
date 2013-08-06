@@ -191,7 +191,7 @@ class DataBaseSucker(object):
                     self.close()
                     sys.exit(0)
                 self.writeEventFile(inputfolder,eventdict)
-                self.writeStatus(atlasdir,eventid)
+                self.writeStatus(os.path.join(atlasdir,eventcode),eventid)
                 if not options.noData:
                     self.writeStationList(eventid,inputfolder)
                 if not options.noFault:
