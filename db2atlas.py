@@ -42,9 +42,9 @@ class DataBaseSucker(object):
             fh.close()
             jdict = json.loads(data)
             if jdict['cities'][0]['distance'] <= MAX_DIST:
-                dist = jdict['cities']['distance']
-                direc = jdict['cities']['direction']
-                cname = jdict['cities']['name']
+                dist = jdict['cities'][0]['distance']
+                direc = jdict['cities'][0]['direction']
+                cname = jdict['cities'][0]['name']
                 locstr = '%i km %s of %s' % (dist,direc,cname)
             else:
                 try:
@@ -53,7 +53,7 @@ class DataBaseSucker(object):
                     try:
                         dist = jdict['cities'][0]['distance']
                         direc = jdict['cities'][0]['direction']
-                        cname = jdict['cities']['name']
+                        cname = jdict['cities'][0]['name']
                         locstr = sprintf('%i km %s of %s',dist,direc,cname)
                     except:
                         pass
