@@ -130,9 +130,9 @@ class DataBaseSucker(object):
 
         return magnitude
             
-    def writeEvents(self,atlasdir,options):
+    def writeEvents(self,atlasdir,options,startDate,endDate):
         #query = 'SELECT id FROM event order by time'
-        query = 'SELECT id,code,lat,lon,depth,magnitude,time FROM event order by time'
+        query = 'SELECT id,code,lat,lon,depth,magnitude,time FROM event order by time WHERE time > "%s" AND time < "%s"' % (startDate,endDate)
         self.cursor.execute(query)
         for row in self.cursor.fetchall():
             eventdict = {}
@@ -392,10 +392,14 @@ if __name__ == '__main__':
     parser.add_option("-f", "--nofault",
                       action="store_true", dest="noFault", default=False,
                       help="Do not write fault files")
+    parser.add_option("-s", "--start-date", dest="startDate",
+                      help="Choose a start date for processing (YYYY-MM-DD)", metavar="STARTDATE")
+    parser.add_option("-e", "--end-date", dest="endDate",
+                      help="Choose an end date for processing (YYYY-MM-DD)", metavar="ENDDATE")
     parser.add_option("-r", "--norun",
                       action="store_true", dest="noRun", default=False,
                       help="Do not write run files")
-    parser.add_option("-s", "--nosource",
+    parser.add_option("-n", "--nosource",
                       action="store_true", dest="noSource", default=False,
                       help="Do not write source.txt file")
     parser.add_option("-a", "--shakehome", dest="shakehome",
@@ -420,7 +424,15 @@ if __name__ == '__main__':
     if options.listEvents:
         sucker.listEvents()
         sys.exit(0)
-    
+
+    startDate = datetime.datetime(1900,1,1)
+    if options.startDate is not None:
+        startDate = datetime.datetime.strptime(options.startDate,'%Y-%m-%d')
+
+    endDate = datetime.datetime(3000,1,1)
+    if options.endDate is not None:
+        endDate = datetime.datetime.strptime(options.endDate,'%Y-%m-%d')
+        
     atlasdir = args[0]
-    sucker.writeEvents(atlasdir,options)
+    sucker.writeEvents(atlasdir,options,startDate,endDate)
     sucker.close()
