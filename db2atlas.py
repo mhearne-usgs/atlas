@@ -132,7 +132,7 @@ class DataBaseSucker(object):
             
     def writeEvents(self,atlasdir,options,startDate,endDate):
         #query = 'SELECT id FROM event order by time'
-        query = 'SELECT id,code,lat,lon,depth,magnitude,time FROM event order by time WHERE time > "%s" AND time < "%s"' % (startDate,endDate)
+        query = 'SELECT id,code,lat,lon,depth,magnitude,time FROM event WHERE time > "%s" AND time < "%s" order by time' % (startDate,endDate)
         self.cursor.execute(query)
         for row in self.cursor.fetchall():
             eventdict = {}
