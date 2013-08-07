@@ -164,7 +164,9 @@ class DataBaseSucker(object):
             #this section handles events that are NOT in the atlas_event table
             if not nrows:
                 eventdict['timezone'] = 'GMT'
-                eventdict['locstring'] = self.getLocation(lat,lon)
+                locstring = self.getLocation(lat,lon)
+                locstring = filter(lambda x: x in string.printable, locstring)
+                eventdict['locstring'] = locstring
                 eventdict['created'] = datetime.datetime.now()
                 eventdict['type'] = ''
                 eventdict['network'] = 'us'
