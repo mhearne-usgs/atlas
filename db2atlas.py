@@ -8,6 +8,7 @@ import datetime
 import time
 import urllib2
 import json
+import string
 
 #third party
 import MySQLdb as mysql
@@ -184,7 +185,9 @@ class DataBaseSucker(object):
             for row in self.cursor.fetchall():
                 eventid = row[0]
                 eventdict['timezone'] = row[1]
-                eventdict['locstring'] = row[2]
+                #filter out non-ascii characters in the location string
+                locstring = filter(lambda x: x in string.printable, row[2])
+                eventdict['locstring'] = locstring
                 eventdict['created'] = row[3]
                 eventdict['type'] = row[4]
                 eventdict['network'] = row[5]
