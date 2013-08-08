@@ -9,6 +9,7 @@ import time
 import urllib2
 import json
 import string
+import re
 
 #third party
 import MySQLdb as mysql
@@ -237,6 +238,10 @@ class DataBaseSucker(object):
         row = self.cursor.fetchone()
         runfile = os.path.join(eventfolder,'RUN_%s' % eventcode)
         runcontent = row[1]
+        #we need to replace the eventcode that's in the runcontent with the new one...
+        match = re.search(r"\D(\d{10,16})\D",runcontent)
+        oldcode = match.group().strip()
+        runcontent = runcontent.replace(oldcode,eventcode)
         f = open(runfile,'wt')
         f.write(runcontent)
         f.close()
