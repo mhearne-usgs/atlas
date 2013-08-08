@@ -163,6 +163,8 @@ class DataBaseSucker(object):
             nrows = self.cursor.execute(query2)
             #this section handles events that are NOT in the atlas_event table
             if not nrows:
+                if options.onlyAtlas:
+                    continue
                 eventdict['timezone'] = 'GMT'
                 locstring = self.getLocation(lat,lon)
                 locstring = filter(lambda x: x in string.printable, locstring)
@@ -409,6 +411,9 @@ if __name__ == '__main__':
                       help="Do not write source.txt file")
     parser.add_option("-a", "--shakehome", dest="shakehome",
                       help="Inform the program about the root directory for the ShakeMap installation", metavar="SHAKEHOME")
+    parser.add_option("-o", "--only-atlas",
+                      action="store_true", dest="onlyAtlas", default=False,
+                      help="Only output existing Atlas events (those in the atlas_event table)")
     parser.add_option("-l", "--listevents",
                       action="store_true", dest="listEvents", default=False,
                       help="Print a list of event ids contained in the database")
