@@ -215,7 +215,7 @@ class DataBaseSucker(object):
                 if not options.noConfig:
                     self.writeConfig(eventid,configfolder)
                 if not options.noRun:
-                    self.writeRun(eventid,os.path.join(atlasdir,eventcode))
+                    self.writeRun(eventid,os.path.join(atlasdir,eventcode),eventcode)
                 
     def writeStatus(self,atlasdir,eventid):
         statusfile = os.path.join(atlasdir,'status.txt')
@@ -229,11 +229,11 @@ class DataBaseSucker(object):
             f.write('%s: %s\n'% (row[0],row[1]))
         f.close()
         
-    def writeRun(self,eventid,eventfolder):
+    def writeRun(self,eventid,eventfolder,eventcode):
         query = 'SELECT filename,content FROM atlas_run_file WHERE event_id=%i' % eventid
         self.cursor.execute(query)
         row = self.cursor.fetchone()
-        runfile = os.path.join(eventfolder,row[0])
+        runfile = os.path.join(eventfolder,'RUN_%s' % eventcode)
         runcontent = row[1]
         f = open(runfile,'wt')
         f.write(runcontent)
