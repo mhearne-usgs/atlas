@@ -121,6 +121,9 @@ if __name__ == '__main__':
     for folder in os.listdir(atlasdir):
         fullfolder = os.path.join(atlasdir,folder)
         shakefile = os.path.join(fullfolder,'output','grid.xml')
+        if not os.path.isfile(shakefile):
+            print 'No grid.xml file found for %s' % folder
+            continue
         expresults,shakedict = getExposure(shakefile,popfile,isofile)
         
         ncols = shakedict['grid_specification']['nlon']
