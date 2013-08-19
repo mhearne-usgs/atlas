@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 #local imports
-from losspager.io import shake
-from losspager.io import esri
+from pagerio import shake
+from pagerio import esri
 from losspager.exposure import exposure
-from losspager.map import country,region
+from pagermap import country,region
 
 #stdlib imports
 import sys
