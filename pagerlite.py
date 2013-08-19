@@ -124,7 +124,7 @@ if __name__ == '__main__':
         if not os.path.isfile(shakefile):
             print 'No grid.xml file found for %s' % folder
             continue
-        expresults,shakedict = getExposure(shakefile,popfile,isofile)
+        expresults,shakedict,msg = getExposure(shakefile,popfile,isofile)
         
         ncols = shakedict['grid_specification']['nlon']
         nrows = shakedict['grid_specification']['nlat']
