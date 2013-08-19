@@ -4,7 +4,8 @@
 from pagerio import shake
 from pagerio import esri
 from losspager.exposure import exposure
-from pagermap import country,region
+from pagermap import country
+from losspager.map import region
 
 #stdlib imports
 import sys
