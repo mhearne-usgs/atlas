@@ -25,7 +25,7 @@ def getExposure(shakefile,popfile,isofile):
     try:
         expobj = exposure.Exposure(shakefile,popfile,isofile)
     except Exception,msg:
-        print 'Error running event %s - "%s"' % (folder,msg)
+        print 'Error running event "%s"' % (msg)
         return (None,None,msg)
     expresults = expobj.calcBasicExposure(mmiranges)
     shakeobj = shake.ShakeGrid(shakefile)
@@ -125,6 +125,9 @@ if __name__ == '__main__':
             print 'No grid.xml file found for %s' % folder
             continue
         expresults,shakedict,msg = getExposure(shakefile,popfile,isofile)
+        if expresults is None:
+            print 'Error running event %s: "%s".' % msg
+            continue
         
         ncols = shakedict['grid_specification']['nlon']
         nrows = shakedict['grid_specification']['nlat']
