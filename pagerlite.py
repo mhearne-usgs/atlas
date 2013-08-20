@@ -126,7 +126,7 @@ if __name__ == '__main__':
             continue
         expresults,shakedict,msg = getExposure(shakefile,popfile,isofile)
         if expresults is None:
-            print 'Error running event %s: "%s".' % msg
+            print 'Error running event %s: "%s".' % (folder,msg)
             continue
         
         ncols = shakedict['grid_specification']['nlon']
