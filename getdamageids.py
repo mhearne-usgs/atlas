@@ -19,8 +19,6 @@ DAMAGETABLES = {'pde':['damage',
                 'htd':['tsudeaths','tsuinjuries','tsudamage','tsuhouses','eventdeaths',
                        'eventinjuries','eventdamage','eventhouses'],
                 'noaa':['deaths','injuries','damage','dedamage','bdestroyed','bdamaged'],
-                'other':['shakingDeaths','landslideDeaths','otherDeaths','missing',
-                         'undiffDeaths','totalDeaths','injuries','homeless'],
                 'utsu':['deaths','injuries','fireflag','damage']}
 
 LOCHIERARCHY = ['atlas_event','other','centennial','pde','pdeisc','noaa']
