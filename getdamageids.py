@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+#stdlib
+import sys
+
 #third party imports
 import MySQLdb as mysql
 
