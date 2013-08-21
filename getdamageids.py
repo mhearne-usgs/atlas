@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+#third party imports
+import MySQLdb as mysql
+
+#local
+from atlas2db import getDataBaseConnections
+
 CONFIGFILE = 'smconfig.ini'
 
 DAMAGETABLES = {'pde':['damage',
@@ -43,6 +49,11 @@ def getHypocenter(cursor,eid):
     return (lat,lon,depth,time)
 
 if __name__ == '__main__':
+    shakehome = sys.argv[1]
+    atlas = getDataBaseConnections(shakehome)
+    connection = mysql.connect(db=atlas['database'],user=atlas['user'],passwd=atlas['password'],host='127.0.0.1')
+    cursor = self.connection.cursor()
+    
     query1 = 'SELECT id FROM event order by time'
     cursor.execute(query)
     rows = cursor.fetchall()
@@ -60,3 +71,6 @@ if __name__ == '__main__':
             foundDamage = cursor.fetchone()[0]
             if foundDamage:
                 print eventcode
+
+    cursor.close()
+    connection.close()
