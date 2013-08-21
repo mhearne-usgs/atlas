@@ -59,7 +59,7 @@ if __name__ == '__main__':
     cursor = connection.cursor()
     
     query1 = 'SELECT id FROM event order by time'
-    cursor.execute(query)
+    cursor.execute(query1)
     rows = cursor.fetchall()
     for row in rows:
         eid = row[0]
