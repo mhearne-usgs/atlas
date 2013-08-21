@@ -53,7 +53,8 @@ def getHypocenter(cursor,eid):
 
 if __name__ == '__main__':
     shakehome = sys.argv[1]
-    atlas = getDataBaseConnections(shakehome)
+    dbdict = getDataBaseConnections(shakehome)
+    atlas = dbdict['atlas']
     connection = mysql.connect(db=atlas['database'],user=atlas['user'],passwd=atlas['password'],host='127.0.0.1')
     cursor = self.connection.cursor()
     
