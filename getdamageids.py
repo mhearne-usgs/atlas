@@ -56,7 +56,7 @@ if __name__ == '__main__':
     connection = mysql.connect(db=atlas['database'],user=atlas['user'],passwd=atlas['password'],host='127.0.0.1')
     cursor = connection.cursor()
     
-    query1 = 'SELECT id FROM event order by time'
+    query1 = 'SELECT id FROM event WHERE time >= "1973-01-01" order by time'
     cursor.execute(query1)
     rows = cursor.fetchall()
     for row in rows:
