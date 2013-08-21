@@ -56,7 +56,7 @@ if __name__ == '__main__':
     dbdict = getDataBaseConnections(shakehome)
     atlas = dbdict['atlas']
     connection = mysql.connect(db=atlas['database'],user=atlas['user'],passwd=atlas['password'],host='127.0.0.1')
-    cursor = self.connection.cursor()
+    cursor = connection.cursor()
     
     query1 = 'SELECT id FROM event order by time'
     cursor.execute(query)
