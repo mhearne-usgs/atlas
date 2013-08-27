@@ -9,6 +9,8 @@ import MySQLdb as mysql
 #local
 from atlas2db import getDataBaseConnections
 
+THRESH = 1000
+
 CONFIGFILE = 'smconfig.ini'
 
 DAMAGETABLES = {'pde':['damage',
@@ -49,8 +51,27 @@ def getHypocenter(cursor,eid):
 
     return (lat,lon,depth,time)
 
+def getBigEvents(expfile):
+    #read the output of the pagerlite process
+    f = open(expfile,'rt')
+    header = f.readline()
+    bigevents = []
+    for line in f.readlines():
+        parts = line.split(',')
+        eid = parts[0].replace('us','')
+        exp5 = int(parts[10])
+        hasExposure = exp5 >= THRESH
+        bigevents.append(eid)
+    f.close()
+    return bigevents
+
 if __name__ == '__main__':
     shakehome = sys.argv[1]
+    csvfile = sys.argv[2]
+
+    #get the list of events that have large exposures
+    bigevents = getBigEvents(csvfile)
+    
     dbdict = getDataBaseConnections(shakehome)
     atlas = dbdict['atlas']
     connection = mysql.connect(db=atlas['database'],user=atlas['user'],passwd=atlas['password'],host='127.0.0.1')
@@ -59,6 +80,7 @@ if __name__ == '__main__':
     query1 = 'SELECT id FROM event WHERE time >= "1973-01-01" order by time'
     cursor.execute(query1)
     rows = cursor.fetchall()
+    damevents = []
     for row in rows:
         eid = row[0]
         lat,lon,depth,time = getHypocenter(cursor,eid)
@@ -72,7 +94,11 @@ if __name__ == '__main__':
             cursor.execute(query)
             foundDamage = cursor.fetchone()[0]
             if foundDamage:
-                print eventcode
+                damevents.append(eventcode)
 
     cursor.close()
     connection.close()
+
+    allevents = list(set(bigevents).union(set(damevents)))
+    for event in allevents:
+        print event
