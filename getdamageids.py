@@ -95,7 +95,7 @@ if __name__ == '__main__':
             cursor.execute(query)
             foundDamage = cursor.fetchone()[0]
             if foundDamage:
-                print '%s: %s' % (eid,table)
+                #print '%s: %s' % (eid,table)
                 damevents.append(eventcode)
                 continue
 
