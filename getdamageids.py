@@ -61,7 +61,8 @@ def getBigEvents(expfile):
         eid = parts[0].replace('us','')
         exp5 = int(parts[10])
         hasExposure = exp5 >= THRESH
-        bigevents.append(eid)
+        if hasExposure:
+            bigevents.append(eid)
     f.close()
     return bigevents
 
