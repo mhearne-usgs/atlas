@@ -109,9 +109,11 @@ if __name__ == '__main__':
                              [  9.5,  10.5]])
 
     if options.singleEvent:
-        #figure out which population data file to use...
-        popfile = getClosestPop(etime.year,datadir)
         shakefile = os.path.join(atlasdir,'output','grid.xml')
+        shakemap = shake.ShakeGrid(shakefile)
+        atts = shakemap.getAttributes()
+        #figure out which population data file to use...
+        popfile = getClosestPop(atts['event']['event_timestamp'].year,datadir)
         expresults,shakedict,msg = getExposure(shakefile,popfile,isofile,multiCountry=options.multiCountry)
         if expresults is None:
             print 'Error running event %s: "%s".' % msg
