@@ -301,8 +301,12 @@ class DataBaseSucker(object):
                 depth = 0.0
             else:
                 depth = row[3]
+                if row[1] == None: #if lat/lon values are NULL, then this is a segment separator
+                fmt = '>\n'
+            else:
+                fmt = '%.4f %.4f %.4f\n' % (row[1],row[2],depth)
             try:
-                f.write('%.4f %.4f %.4f\n' % (row[1],row[2],depth))
+                f.write(fmt)
             except:
                 pass
         f.close()
@@ -358,6 +362,8 @@ class DataBaseSucker(object):
                 lat = trow[4]
                 lon = trow[5]
                 source = trow[6]
+                #some sources have ampersands in them - in XML, this needs to be &amp;
+                source = source.replace('&','&amp;')
                 netid = trow[7]
                 commtype = trow[8]
                 intensity = trow[9]

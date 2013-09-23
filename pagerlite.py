@@ -13,13 +13,53 @@ import os.path
 import datetime
 import gc
 from optparse import OptionParser
+import glob
+import re
 
 #third party imports
 import numpy
 
 TIMEFMT = '%Y-%m-%d %H:%M:%S'
 
-def getExposure(shakefile,popfile,isofile):
+def renderExposure(expresults,eqdict,format='screen'):
+    etime = eqdict['time'].strftime(TIMEFMT)
+    code = eqdict['code']
+    lat = eqdict['lat']
+    lon = eqdict['lon']
+    depth = eqdict['depth']
+    mag = eqdict['mag']
+    if format == 'screen':
+        print '%s: %s %.4f,%.4f %.1f km M%.1f' % (code,etime,lat,lon,depth,mag)
+        for ccode,cexp in expresults:
+            exposure = [exp['exposure'] for exp in cexp]
+            print '%s exposure:' % ccode
+            for i in range(0,len(exposure)):
+                print '\tMMI %i - %s' % (i+1,commify(exposure(i)))
+    return
+                                         
+    print '<event time="%s" code="%s" lat="%.1f" depth="%.1f" mag="%.1f">' % (etime,code,lat,lon,depth,mag)
+    for ccode,cexp in expresults:
+        exposure = [exp['exposure'] for exp in cexp]
+        print '\t<exposure ccode="%s">' % ccode
+        print '\t\t%s' % ' '.join(exposure)
+        print '\t</exposure>'
+    print '</event>'
+    
+
+def getClosestPop(eyear,datafolder):
+    popfiles = glob.glob(os.path.join(datafolder,'*pop*.flt'))
+    imin = -1
+    mindiff = 99999999
+    for i in range(0,len(popfiles)):
+        pfile = popfiles[i]
+        dyear = int(re.search('\d{4}',pfile).group())
+        if abs(dyear-eyear) < mindiff:
+            mindiff = abs(dyear-eyear)
+            imin = i
+
+    return popfiles[imin]
+        
+def getExposure(shakefile,popfile,isofile,multiCountry=False):
     if not os.path.isfile(shakefile):
             return (None,None,'No such file %s' % shakefile)
     try:
@@ -27,7 +67,9 @@ def getExposure(shakefile,popfile,isofile):
     except Exception,msg:
         print 'Error running event "%s"' % (msg)
         return (None,None,msg)
-    expresults = expobj.calcBasicExposure(mmiranges)
+
+    expresults = __calcSimpleExposure(mmiranges)
+
     shakeobj = shake.ShakeGrid(shakefile)
     shakedict = shakeobj.getAttributes()
 
@@ -46,7 +88,7 @@ if __name__ == '__main__':
                       help="Run a single event")
 
     (options, args) = parser.parse_args()
-        
+
     if len(args) < 2:
         parser.print_help()
         sys.exit(1)
@@ -54,7 +96,6 @@ if __name__ == '__main__':
     
     atlasdir = args[0]
     datadir = args[1]
-    popfile = os.path.join(datadir,'lspop2010.flt')
     isofile = os.path.join(datadir,'isogrid.bil')
     mmiranges = numpy.array([[  0.5,   1.5],
                              [  1.5,   2.5],
@@ -68,108 +109,47 @@ if __name__ == '__main__':
                              [  9.5,  10.5]])
 
     if options.singleEvent:
+        #figure out which population data file to use...
+        popfile = getClosestPop(etime.year,datadir)
         shakefile = os.path.join(atlasdir,'output','grid.xml')
-        expresults,shakedict,msg = getExposure(shakefile,popfile,isofile)
+        expresults,shakedict,msg = getExposure(shakefile,popfile,isofile,multiCountry=options.multiCountry)
         if expresults is None:
             print 'Error running event %s: "%s".' % msg
             sys.exit(1)
-        ncols = shakedict['grid_specification']['nlon']
-        nrows = shakedict['grid_specification']['nlat']
-        npixels = nrows*ncols
+
         eventcode = shakedict['shakemap_grid']['shakemap_originator']+shakedict['shakemap_grid']['event_id']
         etime = shakedict['event']['event_timestamp']
         lat = shakedict['event']['lat']
         lon = shakedict['event']['lon']
         depth = shakedict['event']['depth']
         mag = shakedict['event']['magnitude']
-
-        #figure out which country we're in
-        try:
-            isogrid.load(bounds=(lon-0.5,lon+0.5,lat-0.5,lat+0.5))
-            numcode = int(isogrid.getValue(lat,lon))
-            cdict = country.getCountryCode(numcode)
-            ccode = cdict['alpha2']
-            pregion = region.getPagerRegionByCountry(ccode)
-        except:
-            pregion = 0
-            ccode = '0'
-
-        exp1 = expresults[0]
-        exp2 = expresults[1]
-        exp3 = expresults[2]
-        exp4 = expresults[3]
-        exp5 = expresults[4]
-        exp6 = expresults[5]
-        exp7 = expresults[6]
-        exp8 = expresults[7]
-        exp9 = expresults[8]
-        exp10 = expresults[9]
-        fmt = '%s,%s,%.4f,%.4f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%s,%i'
-        tstr = etime.strftime(TIMEFMT)
-        tpl = (eventcode,tstr,lat,lon,depth,mag,exp1,exp2,exp3,exp4,exp5,exp6,exp7,exp8,exp9,exp10,ccode,pregion)
-        print fmt % tpl
+        eqdict = {'code':eventcode,'time':etime,'lat':lat,'lon':lon,'depth':depth,'mag':mag}
+        renderExposure(expresults,eqdict,format='screen')
         sys.exit(0)
     
-    f = open('expresults.csv','wt')
-    f.write('eventcode,time,lat,lon,depth,mag,exp1,exp2,exp3,exp4,exp5,exp6,exp7,exp8,exp9,exp10,ccode,PRegion\n')
-    icount = 0
-    start = datetime.datetime.now()
-
     isogrid = esri.EsriGrid(isofile)
-        
-    oldelapsed = 0
+    print '<expresults>'
     for folder in os.listdir(atlasdir):
         fullfolder = os.path.join(atlasdir,folder)
+        popfile = getClosestPop(etime.year,datadir)
         shakefile = os.path.join(fullfolder,'output','grid.xml')
         if not os.path.isfile(shakefile):
-            print 'No grid.xml file found for %s' % folder
+            sys.stderr.write('No grid.xml file found for %s\n' % folder)
             continue
         expresults,shakedict,msg = getExposure(shakefile,popfile,isofile)
         if expresults is None:
-            print 'Error running event %s: "%s".' % (folder,msg)
+            sys.stdout.write('Error running event %s: "%s".\n' % (folder,msg))
             continue
         
-        ncols = shakedict['grid_specification']['nlon']
-        nrows = shakedict['grid_specification']['nlat']
-        npixels = nrows*ncols
         eventcode = shakedict['shakemap_grid']['shakemap_originator']+shakedict['shakemap_grid']['event_id']
         etime = shakedict['event']['event_timestamp']
         lat = shakedict['event']['lat']
         lon = shakedict['event']['lon']
         depth = shakedict['event']['depth']
         mag = shakedict['event']['magnitude']
-
-        #figure out which country we're in
-        try:
-            isogrid.load(bounds=(lon-0.5,lon+0.5,lat-0.5,lat+0.5))
-            numcode = int(isogrid.getValue(lat,lon))
-            cdict = country.getCountryCode(numcode)
-            ccode = cdict['alpha2']
-            pregion = region.getPagerRegionByCountry(ccode)
-        except:
-            pregion = 0
-        
-
-        exp1 = expresults[0]
-        exp2 = expresults[1]
-        exp3 = expresults[2]
-        exp4 = expresults[3]
-        exp5 = expresults[4]
-        exp6 = expresults[5]
-        exp7 = expresults[6]
-        exp8 = expresults[7]
-        exp9 = expresults[8]
-        exp10 = expresults[9]
-        fmt = '%s,%s,%.4f,%.4f,%.1f,%.1f,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%s,%i\n'
-        tstr = etime.strftime(TIMEFMT)
-        tpl = (eventcode,tstr,lat,lon,depth,mag,exp1,exp2,exp3,exp4,exp5,exp6,exp7,exp8,exp9,exp10,ccode,pregion)
-        f.write(fmt % tpl)
-        icount += 1
-        elapsed = (datetime.datetime.now() - start).seconds
-        delapsed = (elapsed - oldelapsed)/npixels
-        oldelapsed = elapsed
-        print 'Results for %-5i events - %-5i seconds elapsed, %.2e pixels' % (icount,elapsed,npixels)
+        eqdict = {'code':eventcode,'time':etime,'lat':lat,'lon':lon,'depth':depth,'mag':mag}
+        renderExposure(expresults,eqdict,format='xml')
         sys.stdout.flush()
-        
-    f.close()
+    print '</expresults>'
+
 
