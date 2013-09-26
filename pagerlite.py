@@ -6,6 +6,7 @@ from pagerio import esri
 from losspager.exposure import exposure
 from pagermap import country
 from losspager.map import region
+from pagerutil.text import *
 
 #stdlib imports
 import sys
@@ -30,18 +31,19 @@ def renderExposure(expresults,eqdict,format='screen'):
     mag = eqdict['mag']
     if format == 'screen':
         print '%s: %s %.4f,%.4f %.1f km M%.1f' % (code,etime,lat,lon,depth,mag)
-        for ccode,cexp in expresults:
+        for ccode,cexp in expresults.iteritems():
             exposure = [exp['exposure'] for exp in cexp]
             print '%s exposure:' % ccode
             for i in range(0,len(exposure)):
-                print '\tMMI %i - %s' % (i+1,commify(exposure(i)))
-    return
+                print '\tMMI %i - %s' % (i+1,commify(exposure[i]))
+        return
                                          
-    print '<event time="%s" code="%s" lat="%.1f" depth="%.1f" mag="%.1f">' % (etime,code,lat,lon,depth,mag)
-    for ccode,cexp in expresults:
-        exposure = [exp['exposure'] for exp in cexp]
+    print '<event time="%s" code="%s" lat="%.1f" lon="%.1f" depth="%.1f" mag="%.1f">' % (etime,code,lat,lon,depth,mag)
+    for ccode,cexp in expresults.iteritems():
+        exposure = [float(exp['exposure']) for exp in cexp]
+        expstr = ' '.join(['%.0f' % exp for exp in exposure])
         print '\t<exposure ccode="%s">' % ccode
-        print '\t\t%s' % ' '.join(exposure)
+        print '\t\t%s' % expstr
         print '\t</exposure>'
     print '</event>'
     
@@ -59,16 +61,16 @@ def getClosestPop(eyear,datafolder):
 
     return popfiles[imin]
         
-def getExposure(shakefile,popfile,isofile,multiCountry=False):
+def getExposure(shakefile,popfile,isofile,growthfile,multiCountry=False):
     if not os.path.isfile(shakefile):
             return (None,None,'No such file %s' % shakefile)
     try:
-        expobj = exposure.Exposure(shakefile,popfile,isofile)
+        expobj = exposure.Exposure(shakefile,popfile,isofile,growthfile=growthfile)
     except Exception,msg:
         print 'Error running event "%s"' % (msg)
         return (None,None,msg)
 
-    expresults = __calcSimpleExposure(mmiranges)
+    expresults = expobj.getResponseResults(mmiranges)
 
     shakeobj = shake.ShakeGrid(shakefile)
     shakedict = shakeobj.getAttributes()
@@ -97,6 +99,7 @@ if __name__ == '__main__':
     atlasdir = args[0]
     datadir = args[1]
     isofile = os.path.join(datadir,'isogrid.bil')
+    growthfile = os.path.join(datadir,'WPP2012_POP_F02_POPULATION_GROWTH_RATE.XLS')
     mmiranges = numpy.array([[  0.5,   1.5],
                              [  1.5,   2.5],
                              [  2.5,   3.5],
@@ -111,10 +114,10 @@ if __name__ == '__main__':
     if options.singleEvent:
         shakefile = os.path.join(atlasdir,'output','grid.xml')
         shakemap = shake.ShakeGrid(shakefile)
-        atts = shakemap.getAttributes()
+        shakedict = shakemap.getAttributes()
         #figure out which population data file to use...
-        popfile = getClosestPop(atts['event']['event_timestamp'].year,datadir)
-        expresults,shakedict,msg = getExposure(shakefile,popfile,isofile,multiCountry=options.multiCountry)
+        popfile = getClosestPop(shakedict['event']['event_timestamp'].year,datadir)
+        expresults,shakedict,msg = getExposure(shakefile,popfile,isofile,growthfile,multiCountry=True)
         if expresults is None:
             print 'Error running event %s: "%s".' % msg
             sys.exit(1)
@@ -133,18 +136,21 @@ if __name__ == '__main__':
     print '<expresults>'
     for folder in os.listdir(atlasdir):
         fullfolder = os.path.join(atlasdir,folder)
-        popfile = getClosestPop(etime.year,datadir)
+              
         shakefile = os.path.join(fullfolder,'output','grid.xml')
         if not os.path.isfile(shakefile):
             sys.stderr.write('No grid.xml file found for %s\n' % folder)
             continue
-        expresults,shakedict,msg = getExposure(shakefile,popfile,isofile)
+
+        shakemap = shake.ShakeGrid(shakefile)
+        shakedict = shakemap.getAttributes()
+        eventcode = shakedict['shakemap_grid']['shakemap_originator']+shakedict['shakemap_grid']['event_id']
+        etime = shakedict['event']['event_timestamp']
+        popfile = getClosestPop(etime.year,datadir)
+        expresults,shakedict,msg = getExposure(shakefile,popfile,isofile,growthfile,multiCountry=True)
         if expresults is None:
             sys.stdout.write('Error running event %s: "%s".\n' % (folder,msg))
             continue
-        
-        eventcode = shakedict['shakemap_grid']['shakemap_originator']+shakedict['shakemap_grid']['event_id']
-        etime = shakedict['event']['event_timestamp']
         lat = shakedict['event']['lat']
         lon = shakedict['event']['lon']
         depth = shakedict['event']['depth']
