@@ -302,7 +302,7 @@ class DataBaseSucker(object):
             else:
                 depth = row[3]
                 if row[1] == None: #if lat/lon values are NULL, then this is a segment separator
-                fmt = '>\n'
+                    fmt = '>\n'
             else:
                 fmt = '%.4f %.4f %.4f\n' % (row[1],row[2],depth)
             try:
