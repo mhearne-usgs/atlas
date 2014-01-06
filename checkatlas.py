@@ -7,6 +7,7 @@ import ConfigParser
 import argparse
 from xml.dom import minidom
 import csv
+import glob
 
 #third party
 from pagerio import esri
