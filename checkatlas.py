@@ -149,14 +149,18 @@ if __name__ == '__main__':
                     faultHasDepths,faultHasReference,faultNamedCorrectly,faultClosed = checkFault(eventcode,faultfiles[0],faultdict)
                 except LookupError,excobj:
                     print excobj.message
-        print 'Event %s' % eventcode
-        print '\thasFault: %s' % hasFault
-        print '\thasMultiFault: %s (False is good)' % hasMultiFault
-        print '\thasMechanism: %s' % hasMechanism
-        print '\tfaultHasDepths: %s' % faultHasDepths
-        print '\tfaultHasReference: %s' % faultHasReference
-        print '\tfaultNamedCorrectly: %s' % faultNamedCorrectly
-        print '\tfaultClosed: %s' % faultClosed
+
+        faultbad = (hasMultiFault and hasFault) or (not faultNamedCorrectly) or (not faultClosed) or (not faultHasReference)
+        mechbad = (hasMechanism and not hasNewMechanism)
+        if faultbad or mechbad:
+            print 'Event %s' % eventcode
+            print '\thasFault: %s' % hasFault
+            print '\thasMultiFault: %s (False is good)' % hasMultiFault
+            print '\thasMechanism: %s' % hasMechanism
+            print '\tfaultHasDepths: %s' % faultHasDepths
+            print '\tfaultHasReference: %s' % faultHasReference
+            print '\tfaultNamedCorrectly: %s' % faultNamedCorrectly
+            print '\tfaultClosed: %s' % faultClosed
         
                         
         
