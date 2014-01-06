@@ -57,7 +57,7 @@ def checkFault(eventcode,faultfile,faultdict):
     faultClosed = False
     eventshort = eventcode[0:12]
     if eventshort not in faultdict.keys():
-        raise Exception,'Could not find event %s in references database' % eventcode
+        raise LookupError,'Could not find event %s in references database' % eventcode
     lines = open(faultfile,'rt').readlines()
     faultname,faultref = faultdict[eventshort]
     if lines[0].strip().replace('#','') == faultref.strip():
@@ -145,7 +145,11 @@ if __name__ == '__main__':
             hasFault = True
             if len(faultfiles) == 1:
                 hasMultiFault = False
-                faultHasDepths,faultHasReference,faultNamedCorrectly,faultClosed = checkFault(eventcode,faultfiles[0],faultdict)
+                try:
+                    faultHasDepths,faultHasReference,faultNamedCorrectly,faultClosed = checkFault(eventcode,faultfiles[0],faultdict)
+                except LookupError,excobj:
+                    print excobj.message()
+                    continue
         
         
     #Wait a minute - what do I need database info for anyway?  Keep it here just in case I think of a reason.
