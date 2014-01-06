@@ -57,7 +57,7 @@ def checkFault(eventcode,faultfile,faultdict):
     faultClosed = False
     eventshort = eventcode[0:12]
     if eventshort not in faultdict.keys():
-        raise LookupError,'Could not find event %s in references database' % eventcode
+        raise LookupError,'Missing event %s in references database' % eventcode
     lines = open(faultfile,'rt').readlines()
     faultname,faultref = faultdict[eventshort]
     if lines[0].strip().replace('#','') == faultref.strip():
@@ -157,14 +157,9 @@ if __name__ == '__main__':
         fault5bad = hasFault and not faultHasDepths
         mechbad = hasMechanism and not hasNewMechanism
         if fault1bad or fault2bad or fault3bad or fault4bad or fault5bad or mechbad:
-            print 'Event %s' % eventcode
-            print '\thasFault: %s' % hasFault
-            print '\thasMultiFault: %s (False is good)' % hasMultiFault
-            print '\thasMechanism: %s' % hasMechanism
-            print '\tfaultHasDepths: %s' % faultHasDepths
-            print '\tfaultHasReference: %s' % faultHasReference
-            print '\tfaultNamedCorrectly: %s' % faultNamedCorrectly
-            print '\tfaultClosed: %s' % faultClosed
+            print 'Event %s:'
+            if fault1bad:
+                
         
                         
         
