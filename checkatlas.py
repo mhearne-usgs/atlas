@@ -105,9 +105,9 @@ def getFaultDict(faultref):
 if __name__ == '__main__':
     description = 'Perform basic QA/QC on folder of ShakeMap Atlas data.'
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('datadir', metavar='DATADIR', nargs=1,
+    parser.add_argument('datadir', metavar='DATADIR', 
                         help='a folder of ShakeMap data')
-    parser.add_argument('faultref', metavar='FAULTREF', nargs=1,
+    parser.add_argument('faultref', metavar='FAULTREF', 
                         help='Specify a CSV file containing fault reference information.')
 
     args = parser.parse_args()
