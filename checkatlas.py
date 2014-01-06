@@ -150,9 +150,13 @@ if __name__ == '__main__':
                 except LookupError,excobj:
                     print excobj.message
 
-        faultbad = (hasMultiFault and hasFault) or (not faultNamedCorrectly) or (not faultClosed) or (not faultHasReference)
-        mechbad = (hasMechanism and not hasNewMechanism)
-        if faultbad or mechbad:
+        fault1bad = hasFault and hasMultiFault
+        fault2bad = hasFault and not faultNamedCorrectly
+        fault3bad = hasFault and not faultClosed
+        fault4bad = hasFault and not faultHasReference
+        fault5bad = hasFault and not faultHasDepths
+        mechbad = hasMechanism and not hasNewMechanism
+        if faultbad1 or fault2bad or fault3bad or fault4bad or fault5bad or mechbad:
             print 'Event %s' % eventcode
             print '\thasFault: %s' % hasFault
             print '\thasMultiFault: %s (False is good)' % hasMultiFault
