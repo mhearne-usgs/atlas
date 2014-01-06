@@ -26,7 +26,7 @@ if __name__ == '__main__':
             exposures = [int(exp) for exp in country.firstChild.data.split()]
             for mmi in range(0,len(exposures)):
                 exp = exposures[mmi]
-                query = 'INSERT INTO atlas_exposure (event_id,ccode,mmi,exposure) VALUES (%i,"%s",%i,%i)' % (eid,ccode,mmi+1,exp)
+                query = 'INSERT INTO atlas_exposure (event_id,ccode,exp%i) VALUES (%i,"%s",%i)' % (mmi+1,eid,ccode,exp)
                 cursor.execute(query)
                 connection.commit()
     cursor.close()

@@ -3,6 +3,7 @@
 #stdlib
 import os.path
 import sys
+import ConfigParser
 
 #third party
 from pagerio import esri
@@ -10,9 +11,26 @@ import MySQLdb as mysql
 import numpy as np
 from pagermap import country
 
+CONFIGFILE = 'smconfig.ini'
+
 if __name__ == '__main__':
     ccodegrid = sys.argv[1]
-    connection = mysql.connect(db='atlas',user='atlas',passwd='atlas')
+    homedir = os.path.abspath(sys.path[0]) #where is this script?
+    if args.configfile is not None:
+        configfile = os.path.join(homedir,args.configfile)
+    else:
+        configfile = os.path.join(homedir,CONFIGFILE)
+
+    config = ConfigParser.ConfigParser()
+    config.readfp(open(configfile,'rt'))
+    host = '127.0.0.1'
+    if config.has_option('DATABASE','host'):
+        host = config.get('DATABASE','host')
+    db = config.get('DATABASE','db')
+    user = config.get('DATABASE','user')
+    password = config.get('DATABASE','password')
+
+    connection = mysql.connect(db=db,user=user,passwd=password,host=host)
     cursor = connection.cursor()
     query = 'SELECT id,lat,lon FROM event WHERE ccode is NULL'
     cursor.execute(query)
