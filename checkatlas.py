@@ -67,7 +67,7 @@ def checkFault(eventcode,faultfile,faultdict):
         faultNamedCorrectly = True
     firstline = None
     for line in lines:
-        if line.strip().startswith('#'):
+        if line.strip().startswith('#') or line.strip().startswith('>'):
             continue
         if firstline is None:
             firstline = [float(p) for p in line.split()]
