@@ -156,7 +156,7 @@ if __name__ == '__main__':
         fault4bad = hasFault and not faultHasReference
         fault5bad = hasFault and not faultHasDepths
         mechbad = hasMechanism and not hasNewMechanism
-        if faultbad1 or fault2bad or fault3bad or fault4bad or fault5bad or mechbad:
+        if fault1bad or fault2bad or fault3bad or fault4bad or fault5bad or mechbad:
             print 'Event %s' % eventcode
             print '\thasFault: %s' % hasFault
             print '\thasMultiFault: %s (False is good)' % hasMultiFault
