@@ -145,7 +145,7 @@ if __name__ == '__main__':
             hasFault = True
             if len(faultfiles) == 1:
                 hasMultiFault = False
-                faultHasDepths,faultHasReference,faultNamedCorrectly,faultClosed = checkFault(eventcode,faultfiles[0],args.faultref)
+                faultHasDepths,faultHasReference,faultNamedCorrectly,faultClosed = checkFault(eventcode,faultfiles[0],faultdict)
         
         
     #Wait a minute - what do I need database info for anyway?  Keep it here just in case I think of a reason.
