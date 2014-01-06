@@ -83,9 +83,6 @@ def checkFault(eventcode,faultfile,faultdict):
             faultClosed = True
 
     return (faultHasDepths,faultHasReference,faultNamedCorrectly,faultClosed)
-        
-        
-    
 
 def getFaultDict(faultref):
     faultfile = open(faultref,'rt')
@@ -102,7 +99,18 @@ def getFaultDict(faultref):
         eventdict[eventid] = (shortref,longref)
     faultfile.close()
     return eventdict
-    
+
+def checkConstrained(eventfolder):
+    statusfile = os.path.join(eventfolder,'status.txt')
+    if not os.path.isfile(statusfile):
+        return False
+    lines = open(statusfile,'rt').readlines()
+    for line in lines:
+        if line.find('status') > -1:
+            parts = line.split(':')
+            if parts[1].strip().lower() == 'constrained':
+                return True
+    return False
 
 if __name__ == '__main__':
     description = 'Perform basic QA/QC on folder of ShakeMap Atlas data.'
@@ -138,8 +146,10 @@ if __name__ == '__main__':
         faultHasReference = False
         faultNamedCorrectly = False
         faultClosed = False
+        isConstrained = False
         hasNewMechanism = False #does this event have NM for mechanism, if it has a mechanism?
         hasMechanism,hasNewMechanism = checkEvent(eventxml)
+        isConstrained = checkConstrained(folder)
         faultfiles = glob.glob(os.path.join(folder,'input','*_fault.txt'))
         if len(faultfiles):
             hasFault = True
@@ -148,7 +158,8 @@ if __name__ == '__main__':
                 try:
                     faultHasDepths,faultHasReference,faultNamedCorrectly,faultClosed = checkFault(eventcode,faultfiles[0],faultdict)
                 except LookupError,excobj:
-                    print excobj.message
+                    if not isConstrained:
+                        print excobj
 
         fault1bad = hasFault and hasMultiFault
         fault2bad = hasFault and not faultNamedCorrectly
