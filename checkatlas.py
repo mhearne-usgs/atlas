@@ -148,7 +148,7 @@ if __name__ == '__main__':
                 try:
                     faultHasDepths,faultHasReference,faultNamedCorrectly,faultClosed = checkFault(eventcode,faultfiles[0],faultdict)
                 except LookupError,excobj:
-                    print excobj.message()
+                    print excobj.message
                     continue
         
         
