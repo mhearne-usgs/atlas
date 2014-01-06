@@ -149,11 +149,19 @@ if __name__ == '__main__':
                     faultHasDepths,faultHasReference,faultNamedCorrectly,faultClosed = checkFault(eventcode,faultfiles[0],faultdict)
                 except LookupError,excobj:
                     print excobj.message
-                    continue
+        print 'Event %s' % eventcode
+        print '\thasFault: %s' % hasFault
+        print '\thasMultiFault: %s (False is good)' % hasMultiFault
+        print '\thasMechanism: %s' % hasMechanism
+        print '\tfaultHasDepths: %s' % faultHasDepths
+        print '\tfaultHasReference: %s' % faultHasReference
+        print '\tfaultNamedCorrectly: %s' % faultNamedCorrectly
+        print '\tfaultClosed: %s' % faultClosed
         
+                        
         
     #Wait a minute - what do I need database info for anyway?  Keep it here just in case I think of a reason.
-    connection,cursor = getConnection()
-    cursor.close()
-    connection.close()    
+    # connection,cursor = getConnection()
+    # cursor.close()
+    # connection.close()    
     
