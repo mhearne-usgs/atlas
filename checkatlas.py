@@ -38,7 +38,7 @@ def getConnection():
 
 def checkEvent(eventxmlfile):
     root = minidom.parse(eventxmlfile)
-    event = root.getElementsByTagName('event')[0]
+    event = root.getElementsByTagName('earthquake')[0]
     hasmech = False
     hasnewmech = True
     if event.hasAttribute('type'):
