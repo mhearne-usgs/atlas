@@ -159,12 +159,11 @@ if __name__ == '__main__':
         if fault1bad or fault2bad or fault3bad or fault4bad or fault5bad or mechbad:
             print 'Event %s:'
             if fault1bad:
-                
+                pass
         
                         
         
     #Wait a minute - what do I need database info for anyway?  Keep it here just in case I think of a reason.
     # connection,cursor = getConnection()
     # cursor.close()
-    # connection.close()    
-    
+    # connection.close() 
