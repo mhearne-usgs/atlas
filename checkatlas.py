@@ -77,7 +77,7 @@ def checkFault(eventcode,faultfile,faultdict):
         if len(thisline) < 3:
             faultHasDepths = False
     if faultHasDepths:
-        if thisline[0] == firstline[0] and thisline[1] == firstline[1] and thisline[2] == firstline[2]
+        if thisline[0] == firstline[0] and thisline[1] == firstline[1] and thisline[2] == firstline[2]:
             faultClosed = True
 
     return (faultHasDepths,faultHasReference,faultNamedCorrectly,faultClosed)
