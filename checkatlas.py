@@ -161,7 +161,7 @@ def printEventErrors(eventcode,folder,eventxml,faultdict):
             print 'Event %s (constrained) issues: %s' % (eventcode,' | '.join(nuggets))
     else:
         if fault1bad or fault2bad or fault3bad or fault4bad or fault5bad or mechbad:
-            print 'Event %s (reviewed) issues: %s' % (eventcode,'|'.join(nuggets))
+            print 'Event %s (reviewed) issues: %s' % (eventcode,' | '.join(nuggets))
     
         
 
