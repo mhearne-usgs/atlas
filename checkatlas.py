@@ -112,16 +112,59 @@ def checkConstrained(eventfolder):
                 return True
     return False
 
-if __name__ == '__main__':
-    description = 'Perform basic QA/QC on folder of ShakeMap Atlas data.'
-    parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('datadir', metavar='DATADIR', 
-                        help='a folder of ShakeMap data')
-    parser.add_argument('faultref', metavar='FAULTREF', 
-                        help='Specify a CSV file containing fault reference information.')
+def printEventErrors(eventcode,folder,eventxml,faultdict):
+    hasFault = False
+    hasMultiFault = True
+    hasMechanism = False
+    faultHasDepths = False
+    faultHasReference = False
+    faultNamedCorrectly = False
+    faultClosed = False
+    isConstrained = False
+    hasNewMechanism = False #does this event have NM for mechanism, if it has a mechanism?
+    hasMechanism,hasNewMechanism = checkEvent(eventxml)
+    isConstrained = checkConstrained(folder)
+    isMissing = False
+    faultfiles = glob.glob(os.path.join(folder,'input','*_fault.txt'))
+    if len(faultfiles):
+        hasFault = True
+        if len(faultfiles) == 1:
+            hasMultiFault = False
+            try:
+                faultHasDepths,faultHasReference,faultNamedCorrectly,faultClosed = checkFault(eventcode,faultfiles[0],faultdict)
+            except LookupError,excobj:
+                if not isConstrained:
+                    isMissing = True
 
-    args = parser.parse_args()
+    fault1bad = hasFault and hasMultiFault
+    fault2bad = hasFault and not faultNamedCorrectly
+    fault3bad = hasFault and not faultClosed
+    fault4bad = hasFault and not faultHasReference
+    fault5bad = hasFault and not faultHasDepths
+    mechbad = hasMechanism and not hasNewMechanism
+    nuggets = []
+    if fault1bad:
+        nuggets.append('Multiple fault files')
+    if fault2bad:
+        nuggets.append('Misnamed fault file')
+    if fault3bad:
+        nuggets.append('Fault not closed')
+    if fault4bad:
+        nuggets.append('Fault missing reference')
+    if fault5bad:
+        nuggets.append('Fault missing depths')
+    if mechbad:
+        nuggets.append('Event missing mechanism')
+    if isConstrained:
+        if (fault1bad or fault3bad or fault5bad):
+            print 'Event %s issues: %s' % (eventcode,'|'.join(nuggets)
+    else:
+        if fault1bad or fault2bad or fault3bad or fault4bad or fault5bad or mechbad:
+            print 'Event %s issues: %s' % (eventcode,'|'.join(nuggets)
+    
+        
 
+def main(args):
     if not os.path.isdir(args.datadir):
         print 'Could not find data directory %s on the system.' % args.datadir
         sys.exit(1)
@@ -139,38 +182,7 @@ if __name__ == '__main__':
         eventxml = os.path.join(folder,'input','event.xml')
         if not os.path.isfile(eventxml):
             continue
-        hasFault = False
-        hasMultiFault = True
-        hasMechanism = False
-        faultHasDepths = False
-        faultHasReference = False
-        faultNamedCorrectly = False
-        faultClosed = False
-        isConstrained = False
-        hasNewMechanism = False #does this event have NM for mechanism, if it has a mechanism?
-        hasMechanism,hasNewMechanism = checkEvent(eventxml)
-        isConstrained = checkConstrained(folder)
-        faultfiles = glob.glob(os.path.join(folder,'input','*_fault.txt'))
-        if len(faultfiles):
-            hasFault = True
-            if len(faultfiles) == 1:
-                hasMultiFault = False
-                try:
-                    faultHasDepths,faultHasReference,faultNamedCorrectly,faultClosed = checkFault(eventcode,faultfiles[0],faultdict)
-                except LookupError,excobj:
-                    if not isConstrained:
-                        print excobj
-
-        fault1bad = hasFault and hasMultiFault
-        fault2bad = hasFault and not faultNamedCorrectly
-        fault3bad = hasFault and not faultClosed
-        fault4bad = hasFault and not faultHasReference
-        fault5bad = hasFault and not faultHasDepths
-        mechbad = hasMechanism and not hasNewMechanism
-        if fault1bad or fault2bad or fault3bad or fault4bad or fault5bad or mechbad:
-            print 'Event %s:'
-            if fault1bad:
-                pass
+        printEventErrors(eventcode,folder,eventxml,faultdict)
         
                         
         
@@ -178,3 +190,17 @@ if __name__ == '__main__':
     # connection,cursor = getConnection()
     # cursor.close()
     # connection.close() 
+
+if __name__ == '__main__':
+    description = 'Perform basic QA/QC on folder of ShakeMap Atlas data.'
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('datadir', metavar='DATADIR', 
+                        help='a folder of ShakeMap data')
+    parser.add_argument('faultref', metavar='FAULTREF', 
+                        help='Specify a CSV file containing fault reference information.')
+
+    args = parser.parse_args()
+
+    main(args)
+
+    
