@@ -57,7 +57,7 @@ def deleteFromFileSystem(datadir,event,nuke=False):
     outputs = ['config','genex','richter','zoneconfig']
     inputs = ['input','raw']
     for ofolder in outputs:
-        outfolder = os.path.join(datadir,ofolder)
+        outfolder = os.path.join(eventfolder,ofolder)
         shutil.rmtree(outfolder)
     if nuke:
         for ifolder in inputs:
