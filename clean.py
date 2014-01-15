@@ -54,13 +54,16 @@ def main(argparser,args):
 
 def deleteFromFileSystem(datadir,event,nuke=False):
     eventfolder = os.path.join(datadir,event)
+    if not os.path.isdir(eventfolder):
+        return False
     if nuke:
         shutil.rmtree(eventfolder)
         return True
     outputs = ['genex','output','richter','zoneconfig']
     for ofolder in outputs:
         outfolder = os.path.join(eventfolder,ofolder)
-        shutil.rmtree(outfolder)
+        if os.path.isdir(outfolder):
+            shutil.rmtree(outfolder)
     return True
 
 def deleteFromDatabase(db,cursor,event):
