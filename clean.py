@@ -40,7 +40,7 @@ def main(argparser,args):
     db = mysql.connect(passwd=password,db=database,user=user,host='127.0.0.1')
     cursor = db.cursor()
     if args.all:
-        eventlist = getEventList(datadir)
+        eventlist = getEventList(datadir,cursor)
     else:
         eventlist = args.event
 
