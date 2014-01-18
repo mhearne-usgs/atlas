@@ -178,7 +178,8 @@ def main(args):
 
     faultdict = getFaultDict(args.faultref)
     
-    for eventcode in folders:
+    for eventcode in faultdict.keys():
+        
         folder = os.path.join(args.datadir,eventcode)
         eventxml = os.path.join(folder,'input','event.xml')
         if not os.path.isfile(eventxml):
@@ -199,6 +200,8 @@ if __name__ == '__main__':
                         help='a folder of ShakeMap data')
     parser.add_argument('faultref', metavar='FAULTREF', 
                         help='Specify a CSV file containing fault reference information.')
+    parser.add_argument('-f',dest='fixEvents',action='store_true',
+                        help='Fix fault files where discrepancies are found.')
 
     args = parser.parse_args()
 
