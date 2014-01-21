@@ -10,10 +10,10 @@ import csv
 import glob
 
 #third party
-from pagerio import esri
+from neicio import esri
 import MySQLdb as mysql
 import numpy as np
-from pagermap import country
+from neicmap import country
 
 CONFIGFILE = 'smconfig.ini'
 
@@ -178,13 +178,40 @@ def main(args):
 
     faultdict = getFaultDict(args.faultref)
     
-    for eventcode in faultdict.keys():
-        
-        folder = os.path.join(args.datadir,eventcode)
-        eventxml = os.path.join(folder,'input','event.xml')
-        if not os.path.isfile(eventxml):
+    for eventcode in sorted(faultdict.keys()):
+        folders = glob.glob(os.path.join(args.datadir,eventcode+'*'))
+        if len(folders) > 1:
+            print 'Ambiguous match for event code %s:' % eventcode
+            for fol in folders:
+                print '\t%s' % fol
+        if not len(folders):
+            print 'No fault match for event code %s' % eventcode
             continue
-        printEventErrors(eventcode,folder,eventxml,faultdict)
+        folder = folders[0]
+        eventxml = os.path.join(folder,'input','event.xml')
+        # if not os.path.isfile(eventxml):
+        #     continue
+        ffile,longref = faultdict[eventcode]
+        faultfile = os.path.join(folder,'input',ffile)
+        if not os.path.isfile(faultfile):
+            print 'Fault file %s is missing.' % faultfile
+            continue
+        faultHasDepths,faultHasReference,faultNamedCorrectly,faultClosed = checkFault(eventcode,faultfile,faultdict)
+        if args.checkDepths and not faultHasDepths:
+            print 'Event %s is missing depths' % eventcode
+        if args.checkReference and not faultHasReference:
+            print 'Event %s has the wrong reference' % eventcode
+            if args.fixEvents:
+                fixReference(faultfile,longref)
+        if args.checkName and not faultNamedCorrectly:
+            print 'Event %s has the wrong fault file name' % eventcode
+        if args.checkClosed and not faultClosed:
+            print 'Event %s fault file is not closed' % eventcode
+            if args.fixEvents:
+                fixClosed(faultfile)
+        
+        
+
         
                         
         
@@ -200,6 +227,10 @@ if __name__ == '__main__':
                         help='a folder of ShakeMap data')
     parser.add_argument('faultref', metavar='FAULTREF', 
                         help='Specify a CSV file containing fault reference information.')
+    parser.add_argument('-d', dest='checkDepths',action='store_true')
+    parser.add_argument('-r', dest='checkReference',action='store_true')
+    parser.add_argument('-n', dest='checkName',action='store_true')
+    parser.add_argument('-c', dest='checkClosed',action='store_true')
     parser.add_argument('-f',dest='fixEvents',action='store_true',
                         help='Fix fault files where discrepancies are found.')
 
