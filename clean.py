@@ -59,7 +59,7 @@ def deleteFromFileSystem(datadir,event,nuke=False):
     if nuke:
         shutil.rmtree(eventfolder)
         return True
-    outputs = ['genex','output','richter','zoneconfig','save']
+    outputs = ['genex','output','richter','zoneconfig','save','mapping']
     for ofolder in outputs:
         outfolder = os.path.join(eventfolder,ofolder)
         if os.path.isdir(outfolder):
