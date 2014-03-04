@@ -19,10 +19,11 @@ from atlas2db import getDataBaseConnections
 
 
 DEFAULT_RUN = """
-/opt/local/ShakeMap/bin/grind -event EVENTCODE -qtm -xml -lonspan 4.0 -psa 
-/opt/local/ShakeMap/bin/mapping -event EVENTCODE -timestamp -itopo -gsm -pgminten
-/opt/local/ShakeMap/bin/plotregr -event EVENTCODE -lab_dev 6 -psa
-/opt/local/ShakeMap/bin/genex -event EVENTCODE -zip -metadata -shape shape -shape hazus
+SHAKEHOME/bin/grind -event EVENTCODE -qtm -xml -psa 
+SHAKEHOME/bin/mapping -event EVENTCODE -timestamp -itopo -gsm -pgminten
+SHAKEHOME/bin/plotregr -event EVENTCODE -lab_dev 6 -psa
+SHAKEHOME/bin/genex -event EVENTCODE -zip -metadata -shape shape -shape hazus
+SHAKEHOME/bin/transfer -event EVENTCODE
 """
 
 MAGHIERARCHY = ['atlas_event','other','cmt','pde-Mw','pdeisc-Mw','centennial','pde','pdeisc']
@@ -179,7 +180,10 @@ class DataBaseSucker(object):
                 self.writeEventFile(inputfolder,eventdict)
                 runfile = os.path.join(os.path.join(atlasdir,eventcode,'RUN_%s' % eventcode))
                 f = open(runfile,'wt')
-                f.write(DEFAULT_RUN.strip().replace('EVENTCODE',eventcode))
+                runtext = DEFAULT_RUN.strip()
+                runtext = runtext.replace('EVENTCODE',eventcode)
+                runtext = runtext.replace('SHAKEHOME',options.shakehome.rstrip(os.sep))
+                f.write(runtext)
                 f.close()
                 statusfile = os.path.join(atlasdir,eventcode,'status.txt')
                 f = open(statusfile,'wt')

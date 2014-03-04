@@ -19,6 +19,8 @@ def parseEvent(eventxml):
     eqtag = dom.getElementsByTagName('earthquake')[0]
     event['id'] = eqtag.getAttribute('id')
     event['mag'] = float(eqtag.getAttribute('mag'))
+    lat = float(eqtag.getAttribute('lat'))
+    lon = float(eqtag.getAttribute('lon'))
     year = int(eqtag.getAttribute('year'))
     month = int(eqtag.getAttribute('month'))
     day = int(eqtag.getAttribute('day'))
@@ -26,6 +28,14 @@ def parseEvent(eventxml):
     minute = int(eqtag.getAttribute('minute'))
     second = int(math.floor(float(eqtag.getAttribute('second'))))
     event['time'] = datetime.datetime(year,month,day,hour,minute,second)
+    try:
+        event['location'] = eqtag.getAttribute('locstring')
+    except:
+        event['location'] = '%.4f,%.4f' % (lat,lon)
+    try:
+        event['fm'] = eqtag.getAttribute('type')
+    except:
+        event['fm'] = 'None'
     dom.unlink()
     return event
 
