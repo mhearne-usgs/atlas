@@ -2,7 +2,7 @@
 
 #local imports
 from losspager.exposure import exposure
-from pagermap import country
+from losspager.map import region
 
 #stdlib imports
 import sys
@@ -17,7 +17,7 @@ import re
 import numpy
 from neicio import shake
 from neicio import esri
-from neicmap import region
+from neicmap import country
 from neicutil.text import *
 
 TIMEFMT = '%Y-%m-%d %H:%M:%S'
