@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 
 #local imports
-from pagerio import shake
-from pagerio import esri
 from losspager.exposure import exposure
 from pagermap import country
-from losspager.map import region
-from pagerutil.text import *
 
 #stdlib imports
 import sys
@@ -19,6 +15,10 @@ import re
 
 #third party imports
 import numpy
+from neicio import shake
+from neicio import esri
+from neicmap import region
+from neicutil.text import *
 
 TIMEFMT = '%Y-%m-%d %H:%M:%S'
 
