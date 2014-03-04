@@ -19,6 +19,7 @@ from atlas2db import getDataBaseConnections
 
 
 DEFAULT_RUN = """
+SHAKEHOME/bin/retrieve -event
 SHAKEHOME/bin/grind -event EVENTCODE -qtm -xml -psa 
 SHAKEHOME/bin/mapping -event EVENTCODE -timestamp -itopo -gsm -pgminten
 SHAKEHOME/bin/plotregr -event EVENTCODE -lab_dev 6 -psa
