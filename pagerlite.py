@@ -134,9 +134,12 @@ if __name__ == '__main__':
     
     isogrid = esri.EsriGrid(isofile)
     print '<expresults>'
-    for folder in os.listdir(atlasdir):
+    ic = 0
+    folders = os.listdir(atlasdir)
+    for folder in folders:
         fullfolder = os.path.join(atlasdir,folder)
-              
+        sys.stderr.write('Processing %s (%i of %i)\n' % (folder,ic,len(folders)))
+        ic += 1
         shakefile = os.path.join(fullfolder,'output','grid.xml')
         if not os.path.isfile(shakefile):
             sys.stderr.write('No grid.xml file found for %s\n' % folder)
