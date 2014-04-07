@@ -66,7 +66,8 @@ def getExposure(shakefile,popfile,isofile,growthfile,multiCountry=False):
     try:
         ratedict = readNationPop(growthfile)
         poppath,popfname = os.path.split(popfile)
-        baseyear = int(popfname[0:4])
+        m = re.search('[0-9]{4}',popfname)
+        baseyear = int(m.group())
         expobj = Exposure(shakefile,popfile,isofile,ratedict,baseyear)
     except Exception,msg:
         print 'Error running event "%s"' % (msg)
