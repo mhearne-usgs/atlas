@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-#local imports
-from losspager.exposure import exposure
-from losspager.map import region
-
 #stdlib imports
 import sys
 import os.path
@@ -19,6 +15,9 @@ from neicio import shake
 from neicio import esri
 from neicmap import country
 from neicutil.text import *
+from neicpager.exposure import Exposure
+from neicpager.population import PopulationGrowth
+from neicpager.nationpop import readNationPop
 
 TIMEFMT = '%Y-%m-%d %H:%M:%S'
 
@@ -65,12 +64,18 @@ def getExposure(shakefile,popfile,isofile,growthfile,multiCountry=False):
     if not os.path.isfile(shakefile):
             return (None,None,'No such file %s' % shakefile)
     try:
-        expobj = exposure.Exposure(shakefile,popfile,isofile,growthfile=growthfile)
+        ratedict = readNationPop(growthfile)
+        poppath,popfname = os.path.split(popfile)
+        baseyear = int(popfname[0:4])
+        expobj = Exposure(shakefile,popfile,isofile,ratedict,baseyear)
     except Exception,msg:
         print 'Error running event "%s"' % (msg)
         return (None,None,msg)
 
-    expresults = expobj.getResponseResults(mmiranges)
+    if multiCountry:
+        expresults = expobj.getCountryExposure(mmiranges)
+    else:
+        expresults = expobj.getAggregateExposure(mmiranges)
 
     shakeobj = shake.ShakeGrid(shakefile)
     shakedict = shakeobj.getAttributes()
