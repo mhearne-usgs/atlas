@@ -58,7 +58,7 @@ class DataBasePusher(object):
                 'flag':'varchar(16)'},
             'atlas_fault_file':{
                 'id':'INT NOT NULL AUTO_INCREMENT PRIMARY KEY','event_id':'int',
-                'filename':'varchar(64)','firstline':'varchar(512)'},
+                'filename':'varchar(64)','firstline':'varchar(2048)'},
             'atlas_fault':{
                 'id':'INT NOT NULL AUTO_INCREMENT PRIMARY KEY','faultfile_id':'int','seqno':'int',
                 'segment':'int','lat':'double','lon':'double','depth':'float'},
@@ -79,7 +79,11 @@ class DataBasePusher(object):
                 'sourcekey':'varchar(30)','sourcevalue':'varchar(50)'},
             'atlas_run_file':{
                 'id':'INT NOT NULL AUTO_INCREMENT PRIMARY KEY','event_id':'int',
-                'filename':'varchar(64)','content':'varchar(512)'}
+                'filename':'varchar(64)','content':'varchar(2048)'},
+            'atlas_exposure':{
+                'id':'INT NOT NULL AUTO_INCREMENT PRIMARY KEY','event_id':'int',
+                'ccode':'varchar(4)','exp1':'int','exp2':'int','exp3':'int','exp4':'int',
+                'exp5':'int','exp6':'int','exp7':'int','exp8':'int','exp9':'int','exp10':'int'},
                 }
 
         #drop any of the tables in this database that may already exist and contain data
