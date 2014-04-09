@@ -18,6 +18,6 @@ if __name__ == '__main__':
         errorfile = os.path.join(folder,'output','uncertainty.xml')
         gridarcname = '%s_grid.xml' % tfolder
         errorarcname = '%s_error.xml' % tfolder
-        myzip.write(gridarcname,gridfile)
-        myzip.write(errorarcname,errorfile)
+        myzip.write(gridfile,gridarcname)
+        myzip.write(errorfile,errorarcname)
     myzip.close()
