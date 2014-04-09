@@ -10,7 +10,7 @@ if __name__ == '__main__':
         rootfolder = rootfolder[0:-1]
     p,f = os.path.split(rootfolder)
     zipname = '%s_grids.zip' % (f)
-    myzip = zipfile.ZipFile(zipname,zipfile.ZIP_DEFLATED)
+    myzip = zipfile.ZipFile(zipname,'w',zipfile.ZIP_DEFLATED)
     folders = os.listdir(rootfolder)
     for tfolder in folders:
         folder = os.path.join(rootfolder,tfolder)
