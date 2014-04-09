@@ -12,7 +12,9 @@ if __name__ == '__main__':
     zipname = '%s_grids.zip' % (f)
     myzip = zipfile.ZipFile(zipname,'w',zipfile.ZIP_DEFLATED)
     folders = os.listdir(rootfolder)
+    ic = 1
     for tfolder in folders:
+        print 'Reading %s (%i of %i)' % (tfolder,ic,len(folders))
         folder = os.path.join(rootfolder,tfolder)
         gridfile = os.path.join(folder,'output','grid.xml')
         errorfile = os.path.join(folder,'output','uncertainty.xml')
@@ -20,4 +22,5 @@ if __name__ == '__main__':
         errorarcname = '%s_error.xml' % tfolder
         myzip.write(gridfile,gridarcname)
         myzip.write(errorfile,errorarcname)
+        ic += 1
     myzip.close()
