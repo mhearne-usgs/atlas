@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import MySQLdb as mysql
+import mysql.connector as mysql
 import os.path
 from optparse import OptionParser
 import sys
@@ -15,6 +15,33 @@ import traceback
 import string
 import math
 
+DAMAGETABLES = {'pde':['damage',
+                       'casualty'],
+                'pdeisc':['damage',
+                       'casualty'],
+                'emdat':['fatalities','injured','affected','homeless','totalaffected','loss'],
+                'htd':['tsudeaths','tsuinjuries','tsudamage','tsuhouses','eventdeaths',
+                       'eventinjuries','eventdamage','eventhouses'],
+                'noaa':['deaths','injuries','damage','dedamage','bdestroyed','bdamaged'],
+                'utsu':['deaths','injuries','fireflag']}
+
+def getDamageEvents(cursor):
+    eidlist = []
+    for table,columns in DAMAGETABLES.iteritems():
+        nuggets = []
+        for column in columns:
+            nugget = '%s >= 1' % column
+            nuggets.append(nugget)
+        qstr = 'WHERE ' + ' OR '.join(nuggets)
+        query = 'SELECT eid FROM %s %s' % (table,qstr)
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        for row in rows:
+            if row[0] not in eidlist and row[0] is not None:
+                eidlist.append(row[0])
+    return eidlist
+        
+
 #class
 class DataBasePusher(object):
     connection = None
@@ -24,7 +51,7 @@ class DataBasePusher(object):
     def __init__(self,dbdict):
         atlas = dbdict['atlas']
         shakemap = dbdict['shakemap']
-        self.connection = mysql.connect(db=atlas['database'],user=atlas['user'],passwd=atlas['password'],host='127.0.0.1')
+        self.connection = mysql.connect(db=atlas['database'],user=atlas['user'],passwd=atlas['password'],host='127.0.0.1',buffered=True)
         self.cursor = self.connection.cursor()
         # self.shake_connection = mysql.connect(db=shakemap['database'],user=shakemap['user'],passwd=shakemap['password'])
         # self.shake_cursor = self.shake_connection.cursor()
@@ -271,7 +298,10 @@ class DataBasePusher(object):
         for key,value in statusdict.iteritems():
             fmt = 'INSERT INTO atlas_status (event_id,statuskey,statusvalue) VALUES (%i,"%s","%s")'
             query = fmt % (eventid,key,value)
-            self.cursor.execute(query)
+            try:
+                self.cursor.execute(query)
+            except Exception,msg:
+                pass
             self.connection.commit()
         
     def pushEventFile(self,eventdict):

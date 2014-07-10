@@ -37,7 +37,7 @@ def renderExposure(expresults,eqdict,format='screen'):
                 print '\tMMI %i - %s' % (i+1,commify(exposure[i]))
         return
                                          
-    print '<event time="%s" code="%s" lat="%.1f" lon="%.1f" depth="%.1f" mag="%.1f">' % (etime,code,lat,lon,depth,mag)
+    print '<event time="%s" code="%s" lat="%.4f" lon="%.4f" depth="%.1f" mag="%.1f">' % (etime,code,lat,lon,depth,mag)
     for ccode,cexp in expresults.iteritems():
         exposure = [float(exp['exposure']) for exp in cexp]
         expstr = ' '.join(['%.0f' % exp for exp in exposure])

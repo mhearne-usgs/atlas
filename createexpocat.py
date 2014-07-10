@@ -6,7 +6,7 @@ import sys
 import argparse
 
 #third party
-import MySQLdb as mysql
+import mysql.connector as mysql
 from neicio.tag import Tag
 from neicmap import poly
 import numpy as np
@@ -93,8 +93,11 @@ def getOrigin(eid,cursor,loctable):
     locrow = cursor.fetchone()
     if locrow is None:
         return None
-    if locrow[3] is None:
-        return None
+    try:
+        if locrow[3] is None:
+            return None
+    except:
+        pass
     origindict = {}
     origindict['time'] = locrow[0]
     origindict['lat'] = locrow[1]
@@ -102,6 +105,20 @@ def getOrigin(eid,cursor,loctable):
     origindict['depth'] = locrow[3]
     origindict['source'] = loctable
     return origindict
+
+def getLoss(table,column,cursor,eid):
+    query = 'SELECT %s FROM %s WHERE eid=%i' % (column,table,eid)
+    cursor.execute(query)
+    row = cursor.fetchone()
+    if row is None:
+        return None
+    if row[0] is None:
+        loss = 0
+    else:
+        loss = row[0]
+    lossdict = {'loss':loss,'source':table}
+    return lossdict
+    
 
 def getMagnitude(eid,cursor,magtable):
     magnitude = None
@@ -172,7 +189,7 @@ def main(argparser,args):
     px,py = readShakeZone(zonefile)
     pp = poly.PagerPolygon(px,py)
     dbdict = getDataBaseConnections(args.shakehome)['atlas']
-    db = mysql.connect(host='127.0.0.1',db=dbdict['database'],user=dbdict['user'],passwd=dbdict['password'])
+    db = mysql.connect(host='127.0.0.1',db=dbdict['database'],user=dbdict['user'],passwd=dbdict['password'],buffered=True)
     cursor = db.cursor()
     eventquery = 'SELECT a.id,a.ccode,a.lat,a.lon,a.magnitude,b.id FROM event a, atlas_event b WHERE a.id = b.eid'
     cursor.execute(eventquery)
@@ -187,7 +204,7 @@ def main(argparser,args):
         mag = eventrow[4]
         atlasid = eventrow[5]
         hasDamage = checkDamage(cursor,eid)
-        hasAtlas = checkAtlas(cursor,eid)
+        hasAtlas = checkAtlas(cursor,eid)        
         meetsMagnitude = checkMagnitude(lat,lon,mag,pp)
         if not hasDamage and not hasAtlas and not meetsMagnitude:
             continue
@@ -226,14 +243,21 @@ def main(argparser,args):
             for tabletuple in LOSSHIERARCHY[lossfield]:
                 table,column = tabletuple
                 lossdict = getLoss(table,column,cursor,eid)
-                if not eventdict.has_key(lossfield+'s'):
+                if lossdict is None:
+                    continue
+                if not eventdict.has_key(lossfield):
                     lossdict['preferred'] = True
                 else:
                     lossdict['preferred'] = False
-                if eventdict.has_key(lossfield+'s'):
-                    eventdict[lossfield+'s'].append(lossdict)
+                if eventdict.has_key(lossfield):
+                    eventdict[lossfield].append(lossdict)
                 else:
-                    eventdict[lossfield+'s'] = [lossdict]
+                    eventdict[lossfield] = [lossdict]
+
+        # for table in DAMAGETABLES:
+        #     damfields = DAMAGETABLES[table]
+        #     for field in damfields:
+        #         damdict
 
         fmt = 'SELECT ccode,exp1,exp2,exp3,exp4,exp5,exp6,exp7,exp8,exp9,exp10 FROM atlas_exposure WHERE event_id=%i'
         query = fmt % atlasid
@@ -265,8 +289,20 @@ def main(argparser,args):
         for exp in eventdict['exposures']:
             ccode = exp['ccode']
             exposure = exp['exposure']
+            expstr = [str(exp) for exp in exposure]
             fmt = '\t\t<exposure ccode="%s">%s</exposure>\n'
-            f.write(fmt % (ccode,' '.join(exposure)))
+            f.write(fmt % (ccode,' '.join(expstr)))
+
+        for lossfield in LOSSHIERARCHY.keys():
+            losskey = lossfield
+            if not eventdict.has_key(losskey):
+                continue
+            fmt = '\t\t<impact type="%s" source="%s" value="%i" preferred="%s"/>\n'
+            for lossdict in eventdict[losskey]:
+                try:
+                    f.write(fmt % (losskey,lossdict['source'],lossdict['loss'],lossdict['preferred']))
+                except:
+                    pass
             
         f.write('\t</event>\n')
     f.close()

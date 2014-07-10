@@ -10,7 +10,7 @@ import zipfile
 import shutil
 
 #third party
-import MySQLdb as mysql
+import mysql.connector as mysql
 import numpy
 
 #third party (still me, though!)

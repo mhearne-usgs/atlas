@@ -17,7 +17,7 @@ import math
 import ConfigParser
 
 #third party imports
-import MySQLdb as mysql
+import mysql.connector as mysql
 
 CONFIGFILE = 'smconfig.ini'
 

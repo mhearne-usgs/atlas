@@ -6,20 +6,17 @@ import sys
 import ConfigParser
 
 #third party
-from pagerio import esri
-import MySQLdb as mysql
+from neicio import esri
+import mysql.connector as mysql
 import numpy as np
-from pagermap import country
+from neicmap import country
 
 CONFIGFILE = 'smconfig.ini'
 
 if __name__ == '__main__':
     ccodegrid = sys.argv[1]
     homedir = os.path.abspath(sys.path[0]) #where is this script?
-    if args.configfile is not None:
-        configfile = os.path.join(homedir,args.configfile)
-    else:
-        configfile = os.path.join(homedir,CONFIGFILE)
+    configfile = os.path.join(homedir,CONFIGFILE)
 
     config = ConfigParser.ConfigParser()
     config.readfp(open(configfile,'rt'))

@@ -3,16 +3,17 @@
 #stdlib
 from xml.dom import minidom
 import os.path
-import MySQLdb as mysql
+import mysql.connector as mysql
+import sys
 
 if __name__ == '__main__':
     expofile = sys.argv[1]
-    connection = mysql.connect(db='atlas',user='atlas',passwd='atlas')
+    connection = mysql.connect(db='atlas',user='atlas',passwd='atlas',buffered=True)
     cursor = connection.cursor()
     root = minidom.parse(expofile)
     events = root.getElementsByTagName('event')
     for event in events:
-        eventcode = event.getAttribute('code')
+        eventcode = event.getAttribute('code')[2:]
         query = 'SELECT id FROM atlas_event WHERE eventcode="%s"' % eventcode
         cursor.execute(query)
         row = cursor.fetchone()
@@ -23,11 +24,11 @@ if __name__ == '__main__':
         countries = event.getElementsByTagName('exposure')
         for country in countries:
             ccode = country.getAttribute('ccode')
-            exposures = [int(exp) for exp in country.firstChild.data.split()]
-            for mmi in range(0,len(exposures)):
-                exp = exposures[mmi]
-                query = 'INSERT INTO atlas_exposure (event_id,ccode,exp%i) VALUES (%i,"%s",%i)' % (mmi+1,eid,ccode,exp)
-                cursor.execute(query)
-                connection.commit()
+            exposures = [str(int(exp)) for exp in country.firstChild.data.split()]
+            valuestr = ','.join(exposures)
+            expstr = ','.join(['exp'+str(i) for i in range(1,11)])
+            query = 'INSERT INTO atlas_exposure (event_id,ccode,%s) VALUES (%i,"%s",%s)' % (expstr,eid,ccode,valuestr)
+            cursor.execute(query)
+            connection.commit()
     cursor.close()
     connection.close()

@@ -4,7 +4,7 @@
 import sys
 
 #third party imports
-import MySQLdb as mysql
+import mysql.connector as mysql
 
 #local
 from atlas2db import getDataBaseConnections

@@ -11,7 +11,7 @@ import glob
 
 #third party
 from neicio import esri
-import MySQLdb as mysql
+import mysql.connector as mysql
 import numpy as np
 from neicmap import country
 

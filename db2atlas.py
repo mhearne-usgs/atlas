@@ -12,7 +12,7 @@ import string
 import re
 
 #third party
-import MySQLdb as mysql
+import mysql.connector as mysql
 
 #local
 from atlas2db import getDataBaseConnections

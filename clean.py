@@ -7,7 +7,7 @@ import shutil
 import sys
 
 #third party
-import MySQLdb as mysql
+import mysql.connector as mysql
 
 SHAKEDIR = '/home/shake/ShakeMap/'
 
