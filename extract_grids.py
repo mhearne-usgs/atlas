@@ -18,6 +18,8 @@ if __name__ == '__main__':
         folder = os.path.join(rootfolder,tfolder)
         gridfile = os.path.join(folder,'output','grid.xml')
         errorfile = os.path.join(folder,'output','uncertainty.xml')
+        if not os.path.isfile(gridfile):
+            continue
         gridarcname = '%s_grid.xml' % tfolder
         errorarcname = '%s_error.xml' % tfolder
         myzip.write(gridfile,gridarcname)
