@@ -718,6 +718,7 @@ if __name__ == '__main__':
         allfolders = os.listdir(atlasdir)
 
     pat = '\\d{%i}' % idlength #event folders should be a sequence of digits
+    allfolders.sort()
     for f in allfolders:
         folder = os.path.join(atlasdir,f)
         eventfile = os.path.join(folder,'input','event.xml')
