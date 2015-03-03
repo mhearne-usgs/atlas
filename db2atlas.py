@@ -68,7 +68,7 @@ class DataBaseSucker(object):
     def __init__(self,dbdict):
         atlas = dbdict['atlas']
         shakemap = dbdict['shakemap']
-        self.connection = mysql.connect(db=atlas['database'],user=atlas['user'],passwd=atlas['password'],host='127.0.0.1')
+        self.connection = mysql.connect(db=atlas['database'],user=atlas['user'],passwd=atlas['password'],host='127.0.0.1',buffered=True)
         self.cursor = self.connection.cursor()
 
     def listEvents(self):
