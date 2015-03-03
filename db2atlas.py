@@ -27,8 +27,8 @@ SHAKEHOME/bin/genex -event EVENTCODE -zip -metadata -shape shape -shape hazus
 SHAKEHOME/bin/transfer -event EVENTCODE
 """
 
-MAGHIERARCHY = ['atlas_event','other','cmt','pde-Mw','pdeisc-Mw','centennial','pde','pdeisc']
-LOCHIERARCHY = ['atlas_event','other','centennial','pde','pdeisc','noaa']
+MAGHIERARCHY = ['atlas_event','other','cmt','pde-Mw','pdeisc-Mw','pdecomcat3-Mw','centennial','pde','pdeisc','pdecomcat3']
+LOCHIERARCHY = ['atlas_event','other','centennial','pde','pdeisc','pdecomcat3','noaa']
 
 class DataBaseSucker(object):
     connection = None
