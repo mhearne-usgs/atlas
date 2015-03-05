@@ -148,7 +148,21 @@ class DataBaseSucker(object):
                     break
 
         return magnitude
-            
+
+    def checkForExisting(self,eventcode,atlasdir):
+        inputdir = os.path.join(atlasdir,eventcode)
+        existing = glob.glob(inputdir+'*')
+        if not len(existing):
+            existing = None
+        else:
+            existing = existing[-1]
+            if existing[-1] in string.ascii_uppercase:
+                idx = string.ascii_uppercase.index(existing[-1])
+                eventcode = eventcode + string.ascii_uppercase[idx+1]
+            else:
+                eventcode = eventcode + 'A'
+        return (existing,eventcode)
+    
     def writeEvents(self,atlasdir,options,startDate,endDate):
         #query = 'SELECT id FROM event order by time'
         query = 'SELECT id,code,lat,lon,depth,magnitude,time FROM event WHERE time > "%s" AND time < "%s" order by time' % (startDate,endDate)
@@ -164,10 +178,11 @@ class DataBaseSucker(object):
             if depth is None:
                 depth = row[4]
             magnitude = self.getMagnitude(eid)
-            try:
-                eventcode = time.strftime('%Y%m%d%H%M%S')
-            except:
-                pass
+            eventcode = time.strftime('%Y%m%d%H%M%S')
+            existing,eventcode = self.checkForExisting(eventcode,atlasdir)
+            if existing is not None:
+                print 'Event with eventcode %s already exists - creating lettered version %s' % (existing,eventcode)
+                
             
             eventdict['lat'] = lat
             eventdict['lon'] = lon
