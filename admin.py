@@ -32,7 +32,7 @@ def listEvents(eid):
         rows = cursor.fetchall()
         for row in rows:
             ttime,tlat,tlon,tmag,tid = row
-            print '\t%s: %s (%.4f,%.4f) M%.1f' % (table,ttime,tlat,tlon,tmag)
+            print '\t%20s %6i: %s (%.4f,%.4f) M%.1f' % (table,tid,ttime,tlat,tlon,tmag)
     cursor.close()
     db.close()
 
@@ -57,6 +57,27 @@ def mergeEvents(eid1,eid2):
     db.commit()
     cursor.close()
     db.close()
+
+def deleteEvent(eid):
+    db = mysql.connect(host='localhost',db='atlas',user='atlas',passwd="atlas",buffered=True)
+    cursor = db.cursor()
+    #remove all references to event from catalog tables
+    for table in TABLES:
+        query = 'SELECT id FROM %s WHERE eid=%i' % (table,eid)
+        cursor.execute(query)
+        row = cursor.fetchone()
+        if row is not None:
+            tid = row[0]
+            alterquery = 'UPDATE %s SET eid=NULL WHERE id=%i' % (table,tid)
+            print alterquery
+            cursor.execute(alterquery)
+            db.commit()
+    deletequery = 'DELETE FROM event WHERE id=%i' % eid
+    print deletequery
+    cursor.execute(deletequery)
+    db.commit()
+    cursor.close()
+    db.close()
     
 def main(args):
     if args.list:
@@ -68,7 +89,10 @@ def main(args):
         mergeEvents(eid1,eid2)
         print
         listEvents(eid1)
-        
+    if args.delete:
+        eid = args.delete
+        deleteEvent(eid)
+            
 if __name__ == '__main__':
     desc = '''Perform Atlas DB administrative actions (check, merge).
     '''
@@ -77,6 +101,8 @@ if __name__ == '__main__':
                         help='List events from all tables associated with event table ID')
     parser.add_argument('-m','--merge',nargs=2,metavar=['ID1','ID2'],type=int,
                         help='Merge events from all tables associated with ID2 to ID1')
+    parser.add_argument('-d','--delete',metavar='ID',type=int,
+                        help='Delete event from event table and remove references to it from all tables')
     pargs = parser.parse_args()
     main(pargs)
     

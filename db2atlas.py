@@ -140,7 +140,10 @@ class DataBaseSucker(object):
                     break
             else:
                 query = 'SELECT magnitude from %s WHERE eid = %i' % (table,eid)
-                self.cursor.execute(query)
+                try:
+                    self.cursor.execute(query)
+                except:
+                    pass
                 lrow = self.cursor.fetchone()
                 if lrow is None:
                     continue
