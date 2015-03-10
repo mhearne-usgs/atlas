@@ -34,7 +34,7 @@ MAGHIERARCHY = ['atlas_event',
                 'pdecomcat3-Mw',
                 'pde-Mw',
                 'centennial',
-                'pdecomcat3'
+                'pdecomcat3',
                 'pde',
                 'pdeisc']
 LOCHIERARCHY = ['atlas_event',
