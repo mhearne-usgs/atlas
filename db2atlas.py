@@ -172,6 +172,7 @@ class DataBaseSucker(object):
         query = 'SELECT id,code,lat,lon,depth,magnitude,time FROM event WHERE time > "%s" AND time < "%s" order by time' % (startDate,endDate)
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
+        ic = 0
         for row in rows:
             eventdict = {}
             eid = row[0]
@@ -198,9 +199,11 @@ class DataBaseSucker(object):
 
             print 'Writing event data for %s' % eventcode
             query2 = 'SELECT id,timezone,locstring,created,type,network FROM atlas_event WHERE eid=%i' % eid
-            nrows = self.cursor.execute(query2)
+            self.cursor.execute(query2)
+            atlasrows = self.cursor.fetchall()
             #this section handles events that are NOT in the atlas_event table
-            if not nrows:
+            ic += 1
+            if not len(atlasrows):
                 if options.onlyAtlas:
                     continue
                 eventdict['timezone'] = 'GMT'
@@ -227,15 +230,15 @@ class DataBaseSucker(object):
                 f.close()
                 continue
             #this section handles events that ARE in the atlas_event table
-            for row in self.cursor.fetchall():
-                eventid = row[0]
-                eventdict['timezone'] = row[1]
+            for trow in atlasrows:
+                eventid = trow[0]
+                eventdict['timezone'] = trow[1]
                 #filter out non-ascii characters in the location string
-                locstring = filter(lambda x: x in string.printable, row[2])
+                locstring = filter(lambda x: x in string.printable, trow[2])
                 eventdict['locstring'] = locstring
-                eventdict['created'] = row[3]
-                eventdict['type'] = row[4]
-                eventdict['network'] = row[5]
+                eventdict['created'] = trow[3]
+                eventdict['type'] = trow[4]
+                eventdict['network'] = trow[5]
                 inputfolder = os.path.join(atlasdir,eventcode,'input')
                 configfolder = os.path.join(atlasdir,eventcode,'config')
                 try:
@@ -259,7 +262,7 @@ class DataBaseSucker(object):
                     self.writeConfig(eventid,configfolder)
                 if not options.noRun:
                     self.writeRun(eventid,os.path.join(atlasdir,eventcode),eventcode)
-                
+        print 'I processed %i rows of data from the event table' % ic
     def writeStatus(self,atlasdir,eventid):
         statusfile = os.path.join(atlasdir,'status.txt')
         query = 'SELECT statuskey,statusvalue FROM atlas_status WHERE event_id=%i' % eventid
