@@ -171,7 +171,8 @@ class DataBaseSucker(object):
         #query = 'SELECT id FROM event order by time'
         query = 'SELECT id,code,lat,lon,depth,magnitude,time FROM event WHERE time > "%s" AND time < "%s" order by time' % (startDate,endDate)
         self.cursor.execute(query)
-        for row in self.cursor.fetchall():
+        rows = self.cursor.fetchall()
+        for row in rows:
             eventdict = {}
             eid = row[0]
             lat,lon,depth,time = self.getHypocenter(eid)
