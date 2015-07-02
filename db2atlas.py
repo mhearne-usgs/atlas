@@ -20,7 +20,7 @@ from atlas2db import getDataBaseConnections
 
 
 DEFAULT_RUN = """
-SHAKEHOME/bin/retrieve -event
+SHAKEHOME/bin/retrieve -event EVENTCODE
 SHAKEHOME/bin/grind -event EVENTCODE -qtm -xml -psa 
 SHAKEHOME/bin/mapping -event EVENTCODE -timestamp -itopo -gsm -pgminten
 SHAKEHOME/bin/plotregr -event EVENTCODE -lab_dev 6 -psa
@@ -35,12 +35,14 @@ MAGHIERARCHY = ['atlas_event',
                 'pde-Mw',
                 'centennial',
                 'pdecomcat3',
+                'pdecomcat4',
                 'pde',
                 'pdeisc']
 LOCHIERARCHY = ['atlas_event',
                 'other',
                 'centennial',
                 'pdecomcat3',
+                'pdecomcat4',
                 'pde',
                 'pdeisc',
                 'noaa',
@@ -301,10 +303,14 @@ class DataBaseSucker(object):
             f = open(configfile,'wt')
             query = 'SELECT configparam,configvalue FROM atlas_config_param WHERE config_id=%i' % configid
             self.cursor.execute(query)
+            params = []
             for trow in self.cursor.fetchall():
                 param = trow[0]
                 value = trow[1]
+                params.add(param)
                 f.write('%s : %s\n' % (param,value))
+            if filename == 'grind.conf' and 'source_network' not in params:
+                f.write('source_network : us\n')
             f.close()
 
     def writeSource(self,eventid,inputfolder):
