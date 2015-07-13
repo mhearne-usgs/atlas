@@ -307,7 +307,7 @@ class DataBaseSucker(object):
             for trow in self.cursor.fetchall():
                 param = trow[0]
                 value = trow[1]
-                params.add(param)
+                params.append(param)
                 f.write('%s : %s\n' % (param,value))
             if filename == 'grind.conf' and 'source_network' not in params:
                 f.write('source_network : us\n')
