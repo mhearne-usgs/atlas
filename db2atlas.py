@@ -185,6 +185,8 @@ class DataBaseSucker(object):
                 lon = row[3]
             if depth is None:
                 depth = row[4]
+            if time is None:
+                time = row[6]
             magnitude = self.getMagnitude(eid)
             eventcode = time.strftime('%Y%m%d%H%M%S')
             existing,eventcode = self.checkForExisting(eventcode,atlasdir)
