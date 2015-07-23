@@ -229,7 +229,7 @@ class DataBasePusher(object):
             #Add code to check for existing eventcode
             if noReplace:
                 if self.checkEventExists(eventdict['eventcode']):
-                    print 'Event %s already exists in the database.  Not inserting.'
+                    print 'Event %s already exists in the database.  Not inserting.' % eventdict['eventcode']
                     return
                 
             #read in the event.xml file and push to DB
