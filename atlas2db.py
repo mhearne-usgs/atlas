@@ -204,7 +204,7 @@ class DataBasePusher(object):
         f.close()
         return status
 
-    def checkEventExists(eventcode):
+    def checkEventExists(self,eventcode):
         query = 'SELECT eid FROM atlas_event WHERE eventcode="%s"' % eventcode
         cursor.execute(query)
         row = cursor.fetchone()
