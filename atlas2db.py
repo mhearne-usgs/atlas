@@ -203,10 +203,19 @@ class DataBasePusher(object):
             status[key] = value
         f.close()
         return status
-        
+
+    def checkEventExists(eventcode):
+        query = 'SELECT eid FROM atlas_event WHERE eventcode="%s"' % eventcode
+        cursor.execute(query)
+        row = cursor.fetchone()
+        if row is None:
+            return False
+        else:
+            return True
+    
     def pushEvent(self,eventfile,configfiles,stationfiles,sourcefile,
                   faultfile,runfile,statusfile,shakehome,doUpdate,version,revision,
-                  dbdict,skipBadStations=False):
+                  dbdict,skipBadStations=False,noReplace=False):
         try:
             eventdict = self.parseEventFile(eventfile)
             if eventdict is None:
@@ -216,6 +225,13 @@ class DataBasePusher(object):
                 return
             if doUpdate:
                 self.deleteEvent(eventdict['eventcode'])
+
+            #Add code to check for existing eventcode
+            if noReplace:
+                if self.checkEventExists(eventdict['eventcode']):
+                    print 'Event %s already exists in the database.  Not inserting.'
+                    return
+                
             #read in the event.xml file and push to DB
             eventid = self.pushEventFile(eventdict)
             #read in the status file and push to DB
@@ -662,6 +678,8 @@ if __name__ == '__main__':
                       help="Provide ShakeMap revision number",metavar="REVISION")
     parser.add_option("-s", "--shakehome", dest="shakehome",
                       help="Inform the program about the root directory for the ShakeMap installation", metavar="SHAKEHOME")
+    parser.add_option("-n", "--noreplace", dest="noreplace", action="store_true", default=False,
+                      help="Do not insert events where the eventcode already exists in the database")
     parser.add_option("-k", "--skip-bad-stations",
                       action="store_true", dest="skipBadStations", default=False,
                       help="Skip over any station data that fails to parse")
@@ -752,7 +770,7 @@ if __name__ == '__main__':
         print 'Saving event %s' % f
         pusher.pushEvent(eventfile,configfiles,stationfiles,sourcefile,faultfile,runfile,
                          statusfile,options.shakehome,doUpdate,version,revision,
-                         dbdict['shakemap'],skipBadStations=options.skipBadStations)
+                         dbdict['shakemap'],skipBadStations=options.skipBadStations,noReplace=args.noreplace)
         
         
     pusher.close()
