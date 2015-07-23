@@ -770,7 +770,7 @@ if __name__ == '__main__':
         print 'Saving event %s' % f
         pusher.pushEvent(eventfile,configfiles,stationfiles,sourcefile,faultfile,runfile,
                          statusfile,options.shakehome,doUpdate,version,revision,
-                         dbdict['shakemap'],skipBadStations=options.skipBadStations,noReplace=args.noreplace)
+                         dbdict['shakemap'],skipBadStations=options.skipBadStations,noReplace=options.noreplace)
         
         
     pusher.close()
