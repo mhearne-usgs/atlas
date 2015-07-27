@@ -87,8 +87,7 @@ EFFECTS = {'tsunami':[('pde','tsunami'),
                        ('pdeisc','casualty')]}
            
                    
-           
-
+START = '1973-01-01';
 
 def readShakeZone(zonefile,zone='CRATON'):
     """
@@ -216,8 +215,16 @@ def checkAtlas(cursor,eid):
     query = 'SELECT id FROM atlas_event WHERE eid=%i' % eid
     cursor.execute(query)
     row = cursor.fetchone()
-    if row is not None:
-        hasAtlas = True
+    aid = row[0]
+    query2 = 'SELECT statuskey,statusvalue FROM atlas_status WHERE event_id=%i' % aid
+    cursor.execute(query2)
+    rows = cursor.fetchall()
+    for row in rows:
+        key = row[0]
+        value = row[1]
+        if key == 'status' and value != 'automatic':
+            hasAtlas = True
+            break
     return hasAtlas
 
 def checkMagnitude(lat,lon,mag,pp):
@@ -227,6 +234,23 @@ def checkMagnitude(lat,lon,mag,pp):
         return True
     return False       
 
+def checkExposure(cursor,eid):
+    #get atlas_event id
+    query1 = 'SELECT id FROM atlas_event WHERE eid=%i' % eid
+    cursor.execute(query1)
+    row = cursor.fetchone()
+    aid = row[0]
+    #get all the rows for this event in the exposure table, regardless of country
+    query2 = 'SELECT exp5,exp6,exp7,exp8,exp9,exp10 FROM atlas_exposure WHERE event_id=%i' % aid
+    cursor.execute(query2)
+    rows = cursor.fetchall()
+    expsum = 0
+    for row in rows:
+        expsum += sum(row)
+    if expsum > 1000:
+        return True
+    return False
+
 def main(argparser,args):
     zonefile = os.path.join(args.shakehome,'config','zone_config.conf')
     px,py = readShakeZone(zonefile)
@@ -234,11 +258,12 @@ def main(argparser,args):
     dbdict = getDataBaseConnections(args.shakehome)['atlas']
     db = mysql.connect(host='127.0.0.1',db=dbdict['database'],user=dbdict['user'],passwd=dbdict['password'],buffered=True)
     cursor = db.cursor()
-    eventquery = 'SELECT a.id,a.ccode,a.lat,a.lon,a.magnitude,b.id FROM event a, atlas_event b WHERE a.id = b.eid'
+    eventquery = 'SELECT a.id,a.ccode,a.lat,a.lon,a.magnitude,b.id,a.time FROM event a, atlas_event b WHERE a.id = b.eid and a.time > "%s" ORDER by a.time' % START
     cursor.execute(eventquery)
     eventrows = cursor.fetchall()
     ic = 0
     f = open('expocat.xml','wt')
+    f.write('<expocat>\n')
     for eventrow in eventrows:
         eid = eventrow[0]
         ccode = eventrow[1]
@@ -246,11 +271,18 @@ def main(argparser,args):
         lon = eventrow[3]
         mag = eventrow[4]
         atlasid = eventrow[5]
+        etime = eventrow[6]
         hasDamage = checkDamage(cursor,eid)
-        hasAtlas = checkAtlas(cursor,eid)        
+        hasAtlas = checkAtlas(cursor,eid)
         meetsMagnitude = checkMagnitude(lat,lon,mag,pp)
-        if not hasDamage and not hasAtlas and not meetsMagnitude:
+        meetsExposure = checkExposure(cursor,eid)
+        if hasAtlas or hasDamage or meetsExposure:
+            pass
+        else:
+            print 'Skipping event %s M%.1f' % (etime,mag)
             continue
+        # if not hasDamage and not hasAtlas and not meetsMagnitude and not meetsExposure:
+        #     continue
         print 'Extracting %s (%i of %i)' % (eid,ic,len(eventrows))
         ic += 1
         eventdict = {}
@@ -348,6 +380,7 @@ def main(argparser,args):
                     pass
             
         f.write('\t</event>\n')
+    f.write('</expocat>\n')
     f.close()
     cursor.close()
     db.close()
