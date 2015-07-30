@@ -87,7 +87,7 @@ EFFECTS = {'tsunami':[('pde','tsunami'),
                        ('pdeisc','casualty')]}
            
                    
-START = '1973-01-01';
+START = '1960-01-01';
 
 def readShakeZone(zonefile,zone='CRATON'):
     """
