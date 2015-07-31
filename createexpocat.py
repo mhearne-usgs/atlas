@@ -148,7 +148,7 @@ def getOrigin(eid,cursor,loctable):
     origindict['source'] = loctable
     return origindict
 
-def getLoss(table,column,cursor,eid):
+def getLoss(table,column,cursor,eid,type='loss'):
     query = 'SELECT %s FROM %s WHERE eid=%i' % (column,table,eid)
     cursor.execute(query)
     row = cursor.fetchone()
@@ -158,7 +158,10 @@ def getLoss(table,column,cursor,eid):
         loss = 0
     else:
         loss = row[0]
-    lossdict = {'loss':loss,'source':table}
+    if type == 'loss':
+        lossdict = {'loss':loss,'source':table}
+    else:
+        lossdict = {'effect':loss,'source':table}
     return lossdict
     
 
@@ -329,6 +332,21 @@ def main(argparser,args):
                 else:
                     eventdict[lossfield] = [lossdict]
 
+        for effectfield in EFFECTS.keys():
+            for tabletuple in EFFECTS[effectfield]:
+                table,column = tabletuple
+                effectdict = getLoss(table,column,cursor,eid,type='effect')
+                if effectdict is None:
+                    continue
+                if not eventdict.has_key(effectfield):
+                    effectdict['preferred'] = True
+                else:
+                    effectdict['preferred'] = False
+                if eventdict.has_key(effectfield):
+                    eventdict[effectfield].append(effectdict)
+                else:
+                    eventdict[effectfield] = [effectdict]
+
         # for table in DAMAGETABLES:
         #     damfields = DAMAGETABLES[table]
         #     for field in damfields:
@@ -378,7 +396,16 @@ def main(argparser,args):
                     f.write(fmt % (losskey,lossdict['source'],lossdict['loss'],lossdict['preferred']))
                 except:
                     pass
-            
+                
+        #write out the effects (landslide, fire, etc.)
+        for effectfield in EFFECTS.keys():
+            effectkey = effectfield
+            if not eventdict.has_key(effectkey):
+                continue
+            fmt = '\t\t<effect type="%s" source="%s" value="%i" preferred="%s"/>\n'
+            for effectdict in eventdict[effectkey]:
+                f.write(fmt % (effectkey,effectdict['source'],effectdict['effect'],effectdict['preferred']))
+                
         f.write('\t</event>\n')
     f.write('</expocat>\n')
     f.close()
