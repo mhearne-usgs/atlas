@@ -15,76 +15,175 @@ import numpy as np
 from atlas2db import getDataBaseConnections
 
 
-MAGHIERARCHY = ['atlas_event','other','cmt','pde-Mw','pdeisc-Mw','centennial','pde','pdeisc']
-LOCHIERARCHY = ['atlas_event','other','centennial','pde','pdeisc','noaa']
+MAGHIERARCHY = ['atlas_event',
+                'cmt',
+                'pde-Mw',
+                'pdecomcat2-Mw',
+                'pdecomcat3-Mw',
+                'pdecomcat4-Mw',
+                'pdeisc-Mw',
+                'centennial',
+                'pde',
+                'pdecomcat',
+                'pdecomcat2',
+                'pdecomcat3',
+                'pdecomcat4',
+                'pdeisc']
+LOCHIERARCHY = ['atlas_event',
+                'centennial',
+                'pde',
+                'pdecomcat',
+                'pdecomcat2',
+                'pdecomcat3',
+                'pdecomcat4',
+                'pdeisc',
+                'noaa']
 DAMAGETABLES = {'pde':['damage',
                        'casualty'],
+                'pdecomcat2':['damage',
+                              'casualty'],
+                'pdecomcat3':['damage',
+                              'casualty'],              
+                'pdecomcat4':['damage',
+                              'casualty'],
                 'pdeisc':['damage',
                        'casualty'],
                 'emdat':['fatalities','injured','affected','homeless','totalaffected','loss'],
                 'htd':['tsudeaths','tsuinjuries','tsudamage','tsuhouses','eventdeaths',
                        'eventinjuries','eventdamage','eventhouses'],
                 'noaa':['deaths','injuries','damage','dedamage','bdestroyed','bdamaged'],
+                'other':['injured','homeless','landslideDeaths','buildingsDamaged','undiffDeaths',
+                         'otherDeaths','missing','totalDeaths','tsunamiDeaths','shakingDeaths','buildingsDestroyed'],
                 'utsu':['deaths','injuries','fireflag','damage']}
 
-LOSSHIERARCHY = {'totalDeaths':[('pde','totalDeaths'),
+LOSSHIERARCHY = {'totalDeaths':[('other','totalDeaths'),
+                                ('pde','totalDeaths'),
+                                ('pdecomcat2','totalDeaths'),
+                                ('pdecomcat3','totalDeaths'),
+                                ('pdecomcat4','totalDeaths'),
                                 ('pdeisc','totalDeaths'),
                                 ('noaa','deaths'),
                                 ('htd','eventdeaths'),
                                 ('emdat','fatalities')],
-                 'shakingDeaths':[('pde','shakingDeaths'),
+                 'shakingDeaths':[('other','shakingDeaths'),
+                                  ('pde','shakingDeaths'),
+                                  ('pdecomcat2','shakingDeaths'),
+                                  ('pdecomcat3','shakingDeaths'),
+                                  ('pdecomcat4','shakingDeaths'),
                                   ('pdeisc','shakingDeaths'),
                                   ('htd','eventdeaths-tsudeaths')],
                  'dollars':[('munich','directLoss'),
                             ('emdat','loss'),
                             ('pde','econLoss'),
+                            ('pdecomcat2','econLoss'),
+                            ('pdecomcat3','econLoss'),
+                            ('pdecomcat4','econLoss'),
                             ('noaa','damage'),
                             ('htd','eventdamage')],
-                 'injured':[('pde','injured'),
+                 'injured':[('other','injured'),
+                            ('pde','injured'),
+                            ('pdecomcat2','injured'),
+                            ('pdecomcat3','injured'),
+                            ('pdecomcat4','injured'),
                             ('pdeisc','injured'),
                             ('noaa','injuries'),
                             ('htd','eventinjuries'),
                             ('emdat','injured')],
-                 'displaced':[('emdat','homeless'),
+                 'displaced':[('other','homeless'),
+                              ('emdat','homeless'),
                               ('pde','homeless'),
+                              ('pdecomcat2','homeless'),
+                              ('pdecomcat3','homeless'),
+                              ('pdecomcat4','homeless'),
                               ('pdeisc','homeless'),],
-                 'tsunamiDeaths':[('htd','tsudeaths'),
+                 'tsunamiDeaths':[('other','tsunamiDeaths'),
+                                  ('htd','tsudeaths'),
                                   ('pde','tsunamiDeaths'),
+                                  ('pdecomcat2','tsunamiDeaths'),
+                                  ('pdecomcat3','tsunamiDeaths'),
+                                  ('pdecomcat4','tsunamiDeaths'),
                                   ('pdeisc','tsunamiDeaths')],
                  'tsunamiInjured':[('htd','tsuinjuries')],
-                 'missing':[('pde','missing'),
+                 'missing':[('other','missing'),
+                            ('pde','missing'),
+                            ('pdecomcat2','missing'),
+                            ('pdecomcat3','missing'),
+                            ('pdecomcat4','missing'),
                             ('pdeisc','missing')],
-                 'buildingsDamaged':[('pde','buildDamaged'),
+                 'buildingsDamaged':[('other','buildingsDamaged'),
+                                     ('pde','buildDamaged'),
+                                     ('pdecomcat2','buildDamaged'),
+                                     ('pdecomcat3','buildDamaged'),
+                                     ('pdecomcat4','buildDamaged'),
                                      ('pdeisc','buildDamaged'),
                                      ('htd','eventdamage'),
                                      ('noaa','bdamaged')],
-                 'buildingsDestroyed':[('pde','buildDestroyed'),
+                 'buildingsDestroyed':[('other','buildingsDestroyed'),
+                                       ('pde','buildDestroyed'),
+                                       ('pdecomcat2','buildDestroyed'),
+                                       ('pdecomcat3','buildDestroyed'),
+                                       ('pdecomcat4','buildDestroyed'),
                                        ('pdeisc','buildDestroyed'),
                                        ('htd','eventhouses'),
                                        ('noaa','bdestroyed')],
                  'buildingsDamagedOrDestroyed':[('pde','totDamagedBuild'),
+                                                ('pdecomcat2','totDamagedBuild'),
+                                                ('pdecomcat3','totDamagedBuild'),
+                                                ('pdecomcat4','totDamagedBuild'),
                                                 ('pdeisc','totDamagedBuild')],
                 'tsunamiBuildingsDamaged':[('htd','tsudamage')],
                 'tsunamiBuildingsDestroyed':[('htd','tsuhouses')],}
 
 EFFECTS = {'tsunami':[('pde','tsunami'),
+                      ('pdecomcat2','tsunami'),
+                      ('pdecomcat3','tsunami'),
+                      ('pdecomcat4','tsunami'),
                       ('pdeisc','tsunami'),
                       ('htd','maxheight'),
                       ('emdat','tsunami'),
                       ('utsu','tsunami')],
            'fire':[('pde','fire'),
+                   ('pdecomcat2','fire'),
+                   ('pdecomcat3','fire'),
+                   ('pdecomcat4','fire'),
                    ('pdeisc','fire'),
                    ('emdat','fire'),
                    ('utsu','fireflag')],
            'liquefaction':[('pde','liquefaction'),
+                           ('pdecomcat2','liquefaction'),
+                           ('pdecomcat3','liquefaction'),
+                           ('pdecomcat4','liquefaction'),
                            ('pdeisc','liquefaction')],
            'landslide':[('pde','landslide'),
+                        ('pdecomcat2','landslide'),
+                        ('pdecomcat3','landslide'),
+                        ('pdecomcat4','landslide'),
                         ('pdeisc','landslide'),
                         ('emdat','landslide')],
            'damage':[('pde','damage'),
+                     ('pdecomcat2','damage'),
+                     ('pdecomcat3','damage'),
+                     ('pdecomcat4','damage'),
                      ('pdeisc','damage')],
            'casualty':[('pde','casualty'),
+                       ('pdecomcat2','casualty'),
+                       ('pdecomcat3','casualty'),
+                       ('pdecomcat4','casualty'),
                        ('pdeisc','casualty')]}
+
+SOURCES = {'atlas_event':'Various',
+           'centennial':'Centennial',
+           'cmt':'GCMT',
+           'htd':'NOAA HTD',
+           'isc':'ISC-GEM',
+           'noaa':'NOAA SED',
+           'pde':'PDE',
+           'pdecomcat':'PDE',
+           'pdecomcat2':'PDE',
+           'pdecomcat3':'PDE',
+           'pdecomcat4':'PDE',
+           'pdeisc':'PDE',
+           'utsu':'Utsu'}
            
                    
 START = '1960-01-01';
@@ -145,7 +244,7 @@ def getOrigin(eid,cursor,loctable):
     origindict['lat'] = locrow[1]
     origindict['lon'] = locrow[2]
     origindict['depth'] = locrow[3]
-    origindict['source'] = loctable
+    origindict['source'] = SOURCES[loctable]
     return origindict
 
 def getLoss(table,column,cursor,eid,type='loss'):
@@ -158,10 +257,16 @@ def getLoss(table,column,cursor,eid,type='loss'):
         loss = 0
     else:
         loss = row[0]
-    if type == 'loss':
-        lossdict = {'loss':loss,'source':table}
+    if table == 'other':
+        query1 = 'SELECT source FROM other where eid=%i' % eid
+        cursor.execute(query1)
+        source = cursor.fetchone()[0]
     else:
-        lossdict = {'effect':loss,'source':table}
+        source = SOURCES[table]
+    if type == 'loss':
+        lossdict = {'loss':loss,'source':source}
+    else:
+        lossdict = {'effect':loss,'source':source}
     return lossdict
     
 
@@ -194,7 +299,7 @@ def getMagnitude(eid,cursor,magtable):
         return None
     magdict = {}
     magdict['magnitude'] = magnitude
-    magdict['source'] = magtable
+    magdict['source'] = SOURCES[magtable]
     return magdict
 
 def checkDamage(cursor,eid):
@@ -254,6 +359,19 @@ def checkExposure(cursor,eid):
         return True
     return False
 
+def checkReviewed(eid,cursor):
+    query1 = 'SELECT id FROM atlas_event WHERE eid=%i' % eid
+    cursor.execute(query1)
+    row = cursor.fetchone()
+    aid = row[0]
+    query2 = 'SELECT statusvalue FROM atlas_status WHERE event_id=%i AND statuskey="status"' % aid
+    cursor.execute(query2)
+    row = cursor.fetchone()
+    status = row[0]
+    if status not in ['approved','reviewed']:
+        return False
+    return True
+
 def main(argparser,args):
     zonefile = os.path.join(args.shakehome,'config','zone_config.conf')
     px,py = readShakeZone(zonefile)
@@ -291,6 +409,10 @@ def main(argparser,args):
         eventdict = {}
         eventdict['ccode'] = ccode
         for loctable in LOCHIERARCHY:
+            if loctable == 'atlas_event':
+                isReviewed = checkReviewed(eid,cursor)
+                if not isReviewed:
+                    continue
             origindict = getOrigin(eid,cursor,loctable)
             if origindict is None:
                 continue
@@ -305,6 +427,10 @@ def main(argparser,args):
             else:
                 eventdict['origins'] = [origindict.copy()]
         for magtable in MAGHIERARCHY:
+            if magtable == 'atlas_event':
+                isReviewed = checkReviewed(eid,cursor)
+                if not isReviewed:
+                    continue
             magdict = getMagnitude(eid,cursor,magtable)
             if magdict is None:
                 continue
