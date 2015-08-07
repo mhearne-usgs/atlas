@@ -183,7 +183,8 @@ SOURCES = {'atlas_event':'Various',
            'pdecomcat3':'PDE',
            'pdecomcat4':'PDE',
            'pdeisc':'PDE',
-           'utsu':'Utsu'}
+           'utsu':'Utsu',
+           'emdat':'EM-DAT'}
            
                    
 START = '1960-01-01';
