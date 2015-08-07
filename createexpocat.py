@@ -426,6 +426,8 @@ def main(argparser,args):
                 eventdict['origins'].append(origindict.copy())
             else:
                 eventdict['origins'] = [origindict.copy()]
+        if not eventdict.has_key('origins'):
+            continue
         for magtable in MAGHIERARCHY:
             if magtable == 'atlas_event':
                 isReviewed = checkReviewed(eid,cursor)
