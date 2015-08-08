@@ -4,6 +4,7 @@
 import os.path
 import sys
 import argparse
+from datetime import datetime
 
 #third party
 import mysql.connector as mysql
@@ -72,6 +73,24 @@ LOSSHIERARCHY = {'totalDeaths':[('other','totalDeaths'),
                                   ('pdecomcat4','shakingDeaths'),
                                   ('pdeisc','shakingDeaths'),
                                   ('htd','eventdeaths-tsudeaths')],
+                 'landslideDeaths':[('other','landslideDeaths'),
+                                  ('pde','landslideDeaths'),
+                                  ('pdecomcat2','landslideDeaths'),
+                                  ('pdecomcat3','landslideDeaths'),
+                                  ('pdecomcat4','landslideDeaths'),
+                                  ('pdeisc','landslideDeaths')],
+                 'otherDeaths':[('other','otherDeaths'),
+                                  ('pde','otherDeaths'),
+                                  ('pdecomcat2','otherDeaths'),
+                                  ('pdecomcat3','otherDeaths'),
+                                  ('pdecomcat4','otherDeaths'),
+                                  ('pdeisc','otherDeaths')],
+                 'undiffDeaths':[('other','undiffDeaths'),
+                                  ('pde','undiffDeaths'),
+                                  ('pdecomcat2','undiffDeaths'),
+                                  ('pdecomcat3','undiffDeaths'),
+                                  ('pdecomcat4','undiffDeaths'),
+                                  ('pdeisc','undiffDeaths')],
                  'dollars':[('munich','directLoss'),
                             ('emdat','loss'),
                             ('pde','econLoss'),
@@ -188,6 +207,8 @@ SOURCES = {'atlas_event':'Various',
            
                    
 START = '1960-01-01';
+SKIPSTART = datetime(1970,1,1)
+SKIPEND = datetime(1972,12,31,23,59,59)
 
 def readShakeZone(zonefile,zone='CRATON'):
     """
@@ -389,11 +410,15 @@ def main(argparser,args):
     for eventrow in eventrows:
         eid = eventrow[0]
         ccode = eventrow[1]
+        if ccode is None:
+            ccode == ''
         lat = eventrow[2]
         lon = eventrow[3]
         mag = eventrow[4]
         atlasid = eventrow[5]
         etime = eventrow[6]
+        if etime > SKIPSTART and etime < SKIPEND:
+            continue
         hasDamage = checkDamage(cursor,eid)
         hasAtlas = checkAtlas(cursor,eid)
         meetsMagnitude = checkMagnitude(lat,lon,mag,pp)
