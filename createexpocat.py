@@ -252,7 +252,10 @@ def readShakeZone(zonefile,zone='CRATON'):
 
 def getOrigin(eid,cursor,loctable):
     locquery = 'SELECT time,lat,lon,depth FROM %s WHERE eid=%i' % (loctable,eid)
-    cursor.execute(locquery)
+    try:
+        cursor.execute(locquery)
+    except Exception as e:
+        return None
     locrow = cursor.fetchone()
     if locrow is None:
         return None
@@ -383,7 +386,10 @@ def checkExposure(cursor,eid):
 
 def checkReviewed(eid,cursor):
     query1 = 'SELECT id FROM atlas_event WHERE eid=%i' % eid
-    cursor.execute(query1)
+    try:
+        cursor.execute(query1)
+    except:
+        return False
     row = cursor.fetchone()
     aid = row[0]
     query2 = 'SELECT statusvalue FROM atlas_status WHERE event_id=%i AND statuskey="status"' % aid
@@ -398,8 +404,9 @@ def main(argparser,args):
     zonefile = os.path.join(args.shakehome,'config','zone_config.conf')
     px,py = readShakeZone(zonefile)
     pp = poly.PagerPolygon(px,py)
-    dbdict = getDataBaseConnections(args.shakehome)['atlas']
-    db = mysql.connect(host='127.0.0.1',db=dbdict['database'],user=dbdict['user'],passwd=dbdict['password'],buffered=True)
+    #dbdict = getDataBaseConnections(args.shakehome)['atlas']
+    #db = mysql.connect(host='127.0.0.1',db='atlas',user='root',passwd='atlas',buffered=True)
+    db = mysql.connect(host='localhost',db='atlas',user='atlas',passwd="atlas")
     cursor = db.cursor()
     eventquery = 'SELECT a.id,a.ccode,a.lat,a.lon,a.magnitude,b.id,a.time FROM event a, atlas_event b WHERE a.id = b.eid and a.time > "%s" ORDER by a.time' % START
     cursor.execute(eventquery)
